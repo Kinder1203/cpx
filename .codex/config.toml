@@ -1,0 +1,62 @@
+# Project-scoped Codex settings for CODE MEDI CPX Agent.
+# Keep overrides narrow and repo-specific.
+
+project_doc_max_bytes = 32768
+allow_login_shell = false
+model_auto_compact_token_limit = 80000
+tool_output_token_limit = 6000
+model_reasoning_effort = "high"
+model_verbosity = "low"
+plan_mode_reasoning_effort = "high"
+
+[mcp_servers.project-state]
+command = "python"
+args = ["tools\\project_state_mcp.py"]
+startup_timeout_ms = 15000
+
+[memories]
+generate_memories = false
+use_memories = false
+disable_on_external_context = true
+
+[plugins."data-analytics@openai-curated-remote"]
+enabled = false
+
+[plugins."binance@openai-curated-remote"]
+enabled = false
+
+[plugins."figma@openai-curated-remote"]
+enabled = false
+
+[plugins."openai-developers@openai-curated-remote"]
+enabled = false
+
+[plugins."github@openai-curated"]
+enabled = false
+
+[plugins."google-drive@openai-curated"]
+enabled = false
+
+[plugins."documents@openai-primary-runtime"]
+enabled = false
+
+[plugins."spreadsheets@openai-primary-runtime"]
+enabled = false
+
+[plugins."presentations@openai-primary-runtime"]
+enabled = false
+
+[plugins."pdf@openai-primary-runtime"]
+enabled = false
+
+[plugins."computer-use@openai-bundled"]
+enabled = false
+
+[plugins."browser@openai-bundled"]
+enabled = false
+
+[plugins."chrome@openai-bundled"]
+enabled = false
+
+[shell_environment_policy]
+experimental_use_profile = false

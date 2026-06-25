@@ -1,0 +1,173 @@
+schema_version: 1
+last_reviewed: 2026-06-26
+owner: user
+source_of_truth:
+  root_agents: AGENTS.md
+  active_track_state: .codex/state/cpx_agent_state.yaml
+
+maintenance_policy:
+  split_mode: keep_single_file_until_threshold
+  max_entries_before_split_review: 70
+  max_lines_before_split_review: 800
+  notes: split only when route lookup becomes noisy
+
+entries:
+  - prefix: README.md
+    track: root
+    commands:
+      - python tools/healthcheck.py
+    docs_to_reopen:
+      - README.md
+      - AGENTS.md
+      - REPO_DESIGN_GUIDE.md
+      - .codex/state/global_state.yaml
+    notes: root overview and active scope
+  - prefix: AGENTS.md
+    track: root
+    commands:
+      - python tools/healthcheck.py
+    docs_to_reopen:
+      - README.md
+      - AGENTS.md
+      - REPO_DESIGN_GUIDE.md
+      - .codex/state/global_state.yaml
+    notes: root task rules and reading order
+  - prefix: REPO_DESIGN_GUIDE.md
+    track: root
+    commands:
+      - python tools/healthcheck.py
+    docs_to_reopen:
+      - README.md
+      - AGENTS.md
+      - REPO_DESIGN_GUIDE.md
+    notes: repository shape and design policy
+  - prefix: cpx_agent/docs/
+    track: cpx_agent
+    commands:
+      - python tools/healthcheck.py
+      - python -m unittest discover -s cpx_agent/tests -p "test_*.py"
+    docs_to_reopen:
+      - cpx_agent/README.md
+      - cpx_agent/AGENTS.md
+      - cpx_agent/docs/cpx_protocol.md
+      - .codex/state/cpx_agent_state.yaml
+    notes: CPX protocol and demo assumptions
+  - prefix: cpx_agent/prompts/
+    track: cpx_agent
+    commands:
+      - python tools/healthcheck.py
+      - python -m unittest discover -s cpx_agent/tests -p "test_*.py"
+      - python tools/prompt_harness.py --patient-card cpx_agent/data/patient_cards/chest_pain_example.json --validate-only
+    docs_to_reopen:
+      - cpx_agent/docs/cpx_protocol.md
+      - .codex/state/cpx_agent_state.yaml
+    notes: LLM role, evaluator, and safety prompts
+  - prefix: cpx_agent/data/patient_cards/
+    track: cpx_agent
+    commands:
+      - python tools/healthcheck.py
+      - python -m unittest discover -s cpx_agent/tests -p "test_*.py"
+      - python tools/prompt_harness.py --patient-card cpx_agent/data/patient_cards/chest_pain_example.json --validate-only
+    docs_to_reopen:
+      - cpx_agent/docs/cpx_protocol.md
+      - cpx_agent/data/README.md
+      - .codex/state/cpx_agent_state.yaml
+    notes: patient card schema and day-of case swap
+  - prefix: cpx_agent/tests/
+    track: cpx_agent
+    commands:
+      - python tools/healthcheck.py
+      - python -m unittest discover -s cpx_agent/tests -p "test_*.py"
+    docs_to_reopen:
+      - cpx_agent/tests/README.md
+      - cpx_agent/docs/cpx_protocol.md
+    notes: fixture-based network-free checks
+  - prefix: cpx_agent/
+    track: cpx_agent
+    commands:
+      - python tools/healthcheck.py
+      - python -m unittest discover -s cpx_agent/tests -p "test_*.py"
+    docs_to_reopen:
+      - cpx_agent/README.md
+      - cpx_agent/AGENTS.md
+      - .codex/state/cpx_agent_state.yaml
+    notes: active CPX agent track
+  - prefix: docs/app/
+    track: cpx_agent
+    commands:
+      - python tools/healthcheck.py
+      - python -m unittest discover -s cpx_agent/tests -p "test_*.py"
+    docs_to_reopen:
+      - docs/app/README.md
+      - docs/app/prd.md
+      - docs/app/functional_spec.md
+      - docs/app/user_flows.md
+      - docs/app/wireframes.md
+      - docs/app/design.md
+      - docs/app/serious_simulation_direction.md
+      - docs/app/frontend_stack_decision.md
+      - docs/app/pixel_asset_pipeline.md
+      - docs/app/design_reference_intake.md
+      - docs/app/visual_quality_bar.md
+      - cpx_agent/docs/cpx_protocol.md
+      - .codex/state/cpx_agent_state.yaml
+    notes: app planning docs must preserve CPX safety and lightweight setup boundaries
+  - prefix: .codex/state/
+    track: root
+    commands:
+      - python tools/healthcheck.py
+    docs_to_reopen:
+      - AGENTS.md
+      - REPO_DESIGN_GUIDE.md
+      - .codex/state/global_state.yaml
+      - .codex/state/cpx_agent_state.yaml
+      - .codex/state/validation_map.yaml
+    notes: dynamic state and validation routing
+  - prefix: .codex/mcp_profiles/
+    track: root
+    commands:
+      - python tools/healthcheck.py
+    docs_to_reopen:
+      - AGENTS.md
+      - .codex/config.toml
+      - .codex/CONTEXT_POLICY.md
+      - .codex/state/mcp_policy.yaml
+      - docs/app/README.md
+    notes: optional MCP profiles are not active config and must stay task-routed
+  - prefix: .codex/
+    track: root
+    commands:
+      - python tools/healthcheck.py
+    docs_to_reopen:
+      - AGENTS.md
+      - .codex/CONTEXT_POLICY.md
+      - .codex/state/mcp_policy.yaml
+    notes: project Codex config and policy
+  - prefix: .agents/skills/
+    track: root
+    commands:
+      - python tools/healthcheck.py
+    docs_to_reopen:
+      - .agents/skills/README.md
+      - .codex/state/mcp_policy.yaml
+    notes: repo-local skills must stay narrow and task-routed
+  - prefix: tools/
+    track: root
+    commands:
+      - python tools/healthcheck.py
+      - python -m unittest discover -s cpx_agent/tests -p "test_*.py"
+    docs_to_reopen:
+      - tools/README.md
+      - .codex/state/mcp_policy.yaml
+      - .codex/state/validation_map.yaml
+    notes: local tooling and harness reproducibility
+  - prefix: requirements.txt
+    track: root
+    commands:
+      - python tools/healthcheck.py
+      - python -m pip install --dry-run -r requirements.txt
+    docs_to_reopen:
+      - README.md
+      - REPO_DESIGN_GUIDE.md
+      - .codex/state/validation_map.yaml
+    notes: root dependency entrypoint should stay lightweight

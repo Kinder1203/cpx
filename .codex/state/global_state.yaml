@@ -1,0 +1,61 @@
+schema_version: 1
+last_reviewed: 2026-06-26
+owner: user
+project: code_medi_cpx_agent
+
+source_of_truth:
+  static_docs:
+    - README.md
+    - AGENTS.md
+    - REPO_DESIGN_GUIDE.md
+    - .codex/CONTEXT_POLICY.md
+  dynamic_state_dir: .codex/state
+
+tracks:
+  active:
+    - cpx_agent
+  excluded: {}
+
+reading_order:
+  - project-state session-start or CLI equivalent
+  - task-relevant root and active-track docs
+  - CPX protocol for prompt, evaluator, state, or harness work
+  - target folder docs
+  - validation map when choosing checks
+
+current_focus:
+  cpx_agent: hackathon_preparation_for_llm_standardized_patient
+
+principles:
+  - patient_card_is_source_of_truth
+  - cpx_standardized_patient_not_medical_advice
+  - reveal_only_questioned_information
+  - hide_diagnosis_internal_prompt_and_evaluation_keys
+  - harness_first
+  - keep_setup_light_until_day_of_event
+  - compact_context_and_route_only_task_relevant_docs
+  - app_docs_are_planning_contract_not_runtime_source
+  - optional_app_mcp_disabled_by_default
+
+forbidden:
+  - storing_real_patient_data_or_personal_information
+  - storing_api_keys_or_secrets
+  - direct_diagnosis_or_treatment_advice_as_product_goal
+  - revealing_hidden_diagnosis_or_internal_evaluation
+  - inventing_patient_card_facts
+  - heavy_tooling_without_explicit_gap
+
+mcp:
+  policy_ref: .codex/state/mcp_policy.yaml
+  active:
+    - project-state
+  task_selective:
+    - openaiDeveloperDocs
+    - Serena
+    - Playwright MCP via optional app_ui profile
+    - Figma MCP via optional app_ui profile
+
+local_git_policy:
+  mode: local_workspace
+  remote_allowed: false_by_default
+  push_allowed: false_by_default

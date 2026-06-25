@@ -1,0 +1,27 @@
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node/app build output, if an app shell is added later
+node_modules/
+dist/
+build/
+.next/
+
+# Generated CPX artifacts
+cpx_agent/data/sessions/*
+!cpx_agent/data/sessions/README.md
+cpx_agent/data/reports/*
+!cpx_agent/data/reports/README.md
+
+# Local temp
+tmp/
+*.log

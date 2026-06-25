@@ -1,0 +1,63 @@
+schema_version: 1
+last_reviewed: 2026-06-26
+owner: user
+scope: repo_tooling
+purpose: minimal_repo_mcp_policy
+
+defaults:
+  repo_default:
+    - project-state
+  project_state_role: read_only_source_of_truth_summary_and_validation_routing
+  task_selective_only:
+    - openaiDeveloperDocs
+    - Serena
+    - Playwright MCP via .codex/mcp_profiles/app_ui_optional.toml
+    - Figma MCP via .codex/mcp_profiles/app_ui_optional.toml
+  remote_write_mcp: explicit_user_request_required
+  remote_memory_mcp: disallowed
+  duplicate_repo_memory: disallowed
+
+admission_rules:
+  - use_the_smallest_task_relevant_surface
+  - do_not_treat_optional_mcp_as_source_of_truth
+  - understand_data_egress_and_local_state_before_enabling
+  - prefer_repo_files_and_existing_harnesses_for_project_state
+  - update_config_docs_state_and_validation_together
+
+project_state:
+  config_key: project-state
+  entrypoint: tools/project_state_mcp.py
+  read_only: true
+  owns_no_parallel_notes: true
+  resources:
+    - root_summary
+    - cpx_agent_track_summary
+    - session_start
+    - cpx_protocol
+    - prompt_templates
+    - app_setup
+    - app_serious_simulation_direction
+    - app_frontend_stack_decision
+    - app_pixel_asset_pipeline
+    - skill_index
+    - validation_routing
+
+optional_profiles:
+  app_ui:
+    file: .codex/mcp_profiles/app_ui_optional.toml
+    default_enabled: false
+    purpose: app_design_context_and_browser_qa_when_cli_or_docs_are_not_enough
+    tools:
+      playwright:
+        admission: enable_only_after_a_local_or_static_app_surface_exists_and_browser_state_or_long_ui_loop_is_needed
+        default_preference: use_playwright_cli_or_in_app_browser_first_for_short_checks
+        network_boundary: local_hosts_only_unless_explicitly_expanded
+      figma:
+        admission: enable_only_when_a_specific_figma_file_frame_library_or_design_system_source_is_part_of_the_task
+        default_preference: official_remote_mcp_over_third_party_packages
+        subscription_note: official_remote_is_available_on_all_plans_during_beta_desktop_server_may_need_paid_dev_or_full_seat
+    rules:
+      - do_not_copy_optional_blocks_into_active_config_without_task_reason
+      - keep_optional_mcp_out_of_repo_default_to_preserve_token_budget
+      - review_third_party_figma_or_design_mcp_packages_for_license_and_command_execution_risk
+      - remove_or_disable_optional_mcp_after_the_focused_design_or_ui_qa_session

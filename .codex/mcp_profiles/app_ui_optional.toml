@@ -1,0 +1,20 @@
+# Optional app UI MCP profile.
+# Not loaded automatically. Copy only the needed block into .codex/config.toml for a focused
+# app-design or UI-QA session, then remove it after the task.
+
+# Playwright MCP is useful for persistent browser state and exploratory UI automation.
+# For routine app QA, prefer Playwright CLI or repo-local app-ui-qa instructions first because
+# the official Playwright MCP README notes CLI+Skills can be more token-efficient for coding
+# agents.
+#
+# [mcp_servers.playwright]
+# command = "cmd"
+# args = ["/c", "npx", "@playwright/mcp@latest", "--isolated", "--allowed-hosts", "127.0.0.1,localhost"]
+
+# Figma MCP should use the official Figma remote server when the client/account supports it.
+# Figma's official guide lists the remote endpoint as https://mcp.figma.com/mcp and notes that
+# remote MCP is currently free during beta, while desktop MCP needs a Dev or Full seat on paid
+# plans. Do not use third-party Figma MCP packages without a security review.
+#
+# [mcp_servers.figma]
+# url = "https://mcp.figma.com/mcp"

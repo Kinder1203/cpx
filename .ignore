@@ -1,0 +1,8 @@
+.git
+__pycache__
+node_modules
+.next
+dist
+build
+cpx_agent/data/sessions
+cpx_agent/data/reports
