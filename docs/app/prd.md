@@ -2,67 +2,50 @@
 
 ## Product
 
-The intended app shape is a 2D pixel CPX serious simulation. It uses game-like
-accessibility, staged missions, patient state feedback, and a final CPX report to improve
-history-taking, red-flag recognition, communication, and clinical reasoning.
-
-CODE MEDI CPX 앱은 해커톤 당일 공개되는 의료 CPX 주제에 맞춰, 학생 또는 심사자가
-LLM 기반 표준화 환자와 문진하고 문진 결과를 교육용으로 평가할 수 있게 하는 데모
-앱이다.
+CODE MEDI CPX는 의대생이 합성 표준화 환자에게 자유 문장으로 문진하고, 환자 카드에
+근거한 일관된 답변과 교육용 피드백을 받는 2D pixel CPX serious simulation이다.
 
 ## Problem
 
-The risk is not only technical implementation. The app must avoid looking like either a
-plain chatbot or a trivialized medical game. The product needs a serious-simulation frame:
-approachable, visual, and game-like, but still governed by CPX patient-card and evaluation
-contracts.
-
-- 당일 주제가 바뀔 수 있어 질환별 하드코딩은 위험하다.
-- 단순 ChatGPT wrapper는 CPX 평가 가능성, 정보 공개 제한, 안전 경계를 보여주기
-  어렵다.
-- 의료 맥락에서는 진단/치료 조언, 내부 정답 누설, 실제 환자 데이터 저장을
-  방지해야 한다.
-
-## Target Users
-
-- 참가자: 환자 카드, 문진 세션, 평가 로그를 빠르게 확인하며 데모를 구성한다.
-- 시연자/심사자: 환자 역할 일관성, 제한적 정보 공개, 평가 가능성을 확인한다.
-- 학생 사용자: 환자에게 질문하고, 세션 종료 후 피드백을 확인한다.
+- 질환별 UI 하드코딩은 당일 주제 교체를 어렵게 한다.
+- 일반 챗봇은 제한적 정보 공개와 평가 가능한 문진 로그를 보장하지 못한다.
+- 체크리스트 항목을 학습자에게 노출하면 회상 훈련이 아니라 선택 게임이 된다.
+- 시각 연출이 평가 계약보다 앞서면 표준화와 의료 안전 경계가 흔들린다.
 
 ## Goals
 
-- Provide a visually distinctive serious-simulation encounter surface that is more
-  approachable than a conventional CPX checklist or chatbot.
-- Support mission progression and adaptive next-case recommendations without making the
-  system a real diagnosis or treatment product.
-- Keep game-like semantics clinically safe: Patient Stability, Trust, Risk, Critical Safety
-  Event, Case Stabilized, and CPX Mission.
-
-- 환자 카드 기반 대화 일관성.
-- 질문받은 정보만 공개하는 CPX 환자 역할.
-- 내부 진단명, 평가 키, 시스템 프롬프트 누설 방지.
-- 세션 종료 후 checklist 기반 평가 리포트 생성.
-- 당일 새 환자 카드로 빠르게 교체 가능한 구조.
+- 스키마와 게시 상태 검사를 통과한 환자 카드를 단일 사실 원천으로 사용한다.
+- 자유 질문을 카드의 문진 개념으로 정규화하고 해당 정보만 공개한다.
+- 학습자 질문과 환자 답변을 구분해 기록한다.
+- 문진 누락, 위험 신호, 반복 약점을 설명 가능한 규칙으로 평가한다.
+- 학습자가 문진을 바탕으로 임상 판단을 작성한 뒤 리포트를 받는다.
+- 약점 보완과 다른 계통 확장을 수행 수준에 따라 전환한다.
+- 흔하거나 놓치면 위험한 실행 허용 케이스를 우선한다.
+- 브라우저와 Android에서 같은 기능 계약을 사용한다.
 
 ## Non-Goals
 
-- Copying Rhythm Doctor, Pokemon, Duolingo, or any third-party visual assets, characters,
-  sound, protected UI, or trade dress.
-- Framing patient harm as entertainment instead of a simulation debrief.
-
-- 실제 의료 진단 또는 치료 지시.
-- 실제 환자 데이터 입력/저장.
-- 당일 전 특정 질환 전용 앱 구조 확정.
-- 기본 활성 상태의 대형 MCP/플러그인/원격 디자인 연동.
+- 실제 환자 진단·치료 제품
+- 실제 환자 데이터 저장
+- hidden diagnosis, 평가 키, 내부 프롬프트 공개
+- 특정 질환 전용 앱 구조
+- 현재 MVP의 Mission Map, 질문 카드, 상태 게이지, 신체진찰 평가
+- 검증 없는 LLM 답변·평가·논문 인용
 
 ## MVP Acceptance
 
-- The encounter surface can be demonstrated as a pixel CPX mission with patient state
-  feedback, even if backend behavior is mocked or constrained.
-- The final report explains missed questions, unsafe reasoning, and the next mission reason.
+- 환자 카드와 요청 스키마가 시작 전에 검증된다.
+- 학습자는 질문 카드를 보지 않고 자유 문장으로 문진한다.
+- 같은 질문은 카드 범위 안에서 일관되게 답한다.
+- 카드 밖 사실은 생성하지 않는다.
+- 학습자 판단 제출 후 규칙 기반 리포트와 다음 케이스 이유를 확인할 수 있다.
+- 평가 근거는 해당 세션에서 환자에게 실제 확인한 정보로 제한된다.
+- 환자 카드 교체만으로 다른 주제에 같은 흐름을 재사용할 수 있다.
+- UI는 제한된 앱 화면 안에서 겹침 없이 동작한다.
+- 리포트의 피드백 목록은 항목 수와 무관하게 독립 스크롤로 모두 접근할 수 있다.
 
-- 샘플 또는 당일 환자 카드가 스키마 검증을 통과한다.
-- 학생 역할 화면에서 환자에게 문진할 수 있다.
-- 환자 답변은 환자 카드와 프롬프트 계약을 벗어나지 않는다.
-- 종료 후 평가 화면이 문진 누락/강점/위험 발화를 요약한다.
-- 숨겨진 진단명, 내부 프롬프트, 평가 키가 사용자에게 직접 노출되지 않는다.
+## Product Decision Boundary
+
+현재 구현은 `case setup -> encounter -> learner assessment -> evaluation`이다.
+임상 판단은 문제 요약, 우선 진단, 감별 진단, 판단 근거로 구성한다. 채점 기준과
+허용 용어는 환자 카드의 비공개 rubric에 두며 브라우저 payload에는 포함하지 않는다.

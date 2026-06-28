@@ -1,6 +1,60 @@
 {
+  "schema_version": "1.2.0",
+  "publication": {
+    "status": "demo_only",
+    "content_type": "synthetic_educational_case",
+    "clinical_review": {
+      "status": "pending",
+      "reviewer_id": null,
+      "reviewed_at": null,
+      "review_due_at": null
+    }
+  },
+  "evaluation_metadata": {
+    "instrument_type": "formative",
+    "rubric_version": "1.1.0",
+    "formal_validation_status": "not_validated"
+  },
+  "evidence": {
+    "synthetic_fields": ["patient_profile"],
+    "sources": [
+      {
+        "id": "aha_acc_chest_pain_2021",
+        "kind": "clinical_practice_guideline",
+        "title": "2021 AHA/ACC Guideline for the Evaluation and Diagnosis of Chest Pain",
+        "publisher": "American Heart Association and American College of Cardiology",
+        "published_at": "2021-10-28",
+        "url": "https://doi.org/10.1161/CIR.0000000000001029",
+        "accessed_at": "2026-06-28",
+        "scope": "Supports the history domains and risk-oriented formative rubric; it does not validate the synthetic identity or exact vignette values.",
+        "supports": [
+          "cpx_checklist.chief_complaint",
+          "cpx_checklist.onset",
+          "cpx_checklist.pain_location",
+          "cpx_checklist.pain_character",
+          "cpx_checklist.pain_severity",
+          "cpx_checklist.associated_symptoms",
+          "cpx_checklist.modifying_factors",
+          "cpx_checklist.past_history",
+          "cpx_checklist.medication",
+          "cpx_checklist.allergy",
+          "cpx_checklist.family_history",
+          "cpx_checklist.social_history",
+          "clinical_assessment_rubric.assessment_problem_summary",
+          "clinical_assessment_rubric.assessment_primary_impression",
+          "clinical_assessment_rubric.assessment_differentials",
+          "clinical_assessment_rubric.assessment_reasoning"
+        ]
+      }
+    ]
+  },
   "case_id": "synthetic_chest_pain_example",
-  "title": "Chest pain CPX example",
+  "title": "흉통 CPX 데모",
+  "curriculum_metadata": {
+    "topic_tags": ["acute-care", "cardiovascular", "chest-pain"],
+    "frequency_band": "common",
+    "clinical_importance": "critical"
+  },
   "patient_profile": {
     "name": "Kim OO",
     "age": 52,
@@ -24,20 +78,24 @@
     "hidden_diagnosis": "acute coronary syndrome"
   },
   "disclosure_policy": {
-    "can_open_with": ["chief_complaint", "pain_severity", "general_distress"],
+    "can_open_with": ["chief_complaint"],
     "only_if_asked": [
       "onset",
       "pain_location",
       "pain_character",
+      "pain_severity",
       "associated_symptoms",
+      "modifying_factors",
       "past_history",
       "medication",
+      "allergy",
       "family_history",
       "social_history"
     ],
     "never_disclose": ["hidden_diagnosis", "evaluator_notes", "checklist_answers"]
   },
   "conversation_style": {
+    "opening_line": "안녕하세요.",
     "tone": "anxious but cooperative",
     "medical_knowledge_level": "layperson",
     "default_answer_length": "short",
@@ -46,44 +104,221 @@
   "cpx_checklist": [
     {
       "id": "chief_complaint",
-      "label": "Confirm chief complaint"
+      "label": "주호소 확인",
+      "keywords": ["주호소", "불편", "문제", "증상", "brought", "complaint", "concern", "symptom"],
+      "patient_response": "가슴이 꽉 조이는 것처럼 아파서 왔어요. 좀 심해서 걱정돼요.",
+      "weakness_tag": "open_question",
+      "critical": false,
+      "why_it_matters": "환자가 가장 불편하게 느끼는 문제를 직접 확인해야 이후 질문의 우선순위와 환자 중심성이 분명해집니다."
     },
     {
       "id": "onset",
-      "label": "Ask onset and duration"
+      "label": "발병 시점과 경과",
+      "keywords": ["언제", "시작", "몇 시간", "기간", "onset", "duration", "start"],
+      "patient_response": "한 2시간 전부터 시작됐어요.",
+      "weakness_tag": "timeline",
+      "critical": true,
+      "why_it_matters": "증상이 언제 시작됐고 어떻게 이어졌는지는 급성 위험도를 판단하고 시간에 민감한 상황을 구분하는 핵심 정보입니다."
     },
     {
       "id": "pain_location",
-      "label": "Ask pain location"
+      "label": "통증 위치",
+      "keywords": ["어디", "위치", "가운데", "흉골", "location", "where", "breastbone"],
+      "patient_response": "가슴 한가운데, 흉골 뒤쪽이 아파요.",
+      "weakness_tag": "symptom_map",
+      "critical": false,
+      "why_it_matters": "통증 위치는 증상 양상을 구조화하고 가능한 원인을 비교하는 기본 단서입니다."
     },
     {
       "id": "pain_character",
-      "label": "Ask pain character"
+      "label": "통증 양상",
+      "keywords": ["느낌", "양상", "조이는", "짓누르는", "character", "quality", "squeezing", "tight"],
+      "patient_response": "꽉 조이고 짓누르는 느낌이에요.",
+      "weakness_tag": "symptom_map",
+      "critical": false,
+      "why_it_matters": "조이는지, 찌르는지와 같은 환자의 표현은 통증의 임상적 패턴을 구분하는 데 필요합니다."
+    },
+    {
+      "id": "pain_severity",
+      "label": "통증 강도",
+      "keywords": ["강도", "몇 점", "정도", "심한", "severity", "scale", "score"],
+      "patient_response": "10점 만점에 8점 정도로 아파요.",
+      "weakness_tag": "symptom_map",
+      "critical": false,
+      "why_it_matters": "통증 강도는 현재 불편의 정도를 구체화하고 이후 변화 여부를 비교하는 기준이 됩니다."
     },
     {
       "id": "associated_symptoms",
-      "label": "Ask associated symptoms"
+      "label": "동반 증상",
+      "keywords": ["숨", "땀", "메스꺼움", "동반", "associated", "sweat", "breath", "nausea"],
+      "patient_response": "네. 숨이 좀 차고 식은땀이 나고 메스꺼워요.",
+      "weakness_tag": "red_flag_reasoning",
+      "critical": true,
+      "why_it_matters": "호흡곤란, 식은땀, 오심 같은 동반 증상은 중대한 원인을 우선 고려해야 하는지 판단하는 위험 신호입니다."
+    },
+    {
+      "id": "modifying_factors",
+      "label": "악화와 완화 요인",
+      "keywords": ["악화", "완화", "계단", "움직", "쉬면", "나아", "worse", "better", "exertion", "rest"],
+      "patient_response": "계단을 오를 때 더 심해졌고, 쉬면 조금 나아지지만 통증은 남아 있어요.",
+      "weakness_tag": "symptom_map",
+      "critical": true,
+      "why_it_matters": "활동과 휴식에 따른 변화는 통증의 패턴과 긴급도를 해석하는 데 필요한 정보입니다."
     },
     {
       "id": "past_history",
-      "label": "Ask past medical history"
+      "label": "과거 병력",
+      "keywords": ["과거력", "질환", "병", "고혈압", "당뇨", "past", "history", "condition"],
+      "patient_response": "고혈압과 당뇨가 있어요.",
+      "weakness_tag": "risk_history",
+      "critical": true,
+      "why_it_matters": "기저질환은 현재 증상의 사전 위험도를 바꾸므로 증상 정보와 함께 확인해야 합니다."
     },
     {
       "id": "medication",
-      "label": "Ask medication history"
+      "label": "복용약",
+      "keywords": ["약", "복용", "먹고", "medication", "medicine", "taking"],
+      "patient_response": "혈압약과 당뇨약을 먹고 있어요.",
+      "weakness_tag": "medication_history",
+      "critical": false,
+      "why_it_matters": "복용약은 기존 질환, 치료 상태, 약물 관련 위험을 파악하는 데 필요한 정보입니다."
+    },
+    {
+      "id": "allergy",
+      "label": "알레르기",
+      "keywords": ["알레르기", "부작용", "allergy", "allergic", "reaction"],
+      "patient_response": "제가 아는 약물 알레르기는 없어요.",
+      "weakness_tag": "medication_history",
+      "critical": false,
+      "why_it_matters": "알레르기 확인은 복약력을 완성하고 이후 의료진이 안전한 판단을 하는 데 필요한 기본 정보입니다."
     },
     {
       "id": "family_history",
-      "label": "Ask family history"
+      "label": "가족력",
+      "keywords": ["가족", "아버지", "심장", "family", "father", "heart"],
+      "patient_response": "아버지가 예전에 심장마비를 겪으셨어요.",
+      "weakness_tag": "family_history",
+      "critical": false,
+      "why_it_matters": "가족력은 환자 개인의 위험 배경을 보완하며 관련 질환의 가능성을 해석하는 데 도움을 줍니다."
     },
     {
       "id": "social_history",
-      "label": "Ask smoking and alcohol history"
+      "label": "흡연과 음주력",
+      "keywords": ["흡연", "음주", "담배", "술", "smoke", "smoking", "alcohol", "drink", "social"],
+      "patient_response": "흡연은 20갑년 정도 했고, 술은 일주일에 두 번 정도 마셔요.",
+      "weakness_tag": "social_history",
+      "critical": false,
+      "why_it_matters": "흡연과 음주력은 현재 증상과 관련된 위험 인자를 파악하고 생활 맥락을 이해하는 데 필요합니다."
     }
   ],
   "safety_notes": {
     "educational_only": true,
     "do_not_offer_treatment": true,
-    "do_not_reveal_hidden_diagnosis": true
+    "do_not_reveal_hidden_diagnosis": true,
+    "boundary_terms": [
+      "give me a diagnosis",
+      "what is my diagnosis",
+      "what treatment",
+      "prescribe for me",
+      "진단명",
+      "진단해",
+      "치료법",
+      "처방해",
+      "무슨 병",
+      "정답",
+      "병명"
+    ],
+    "boundary_response": "이 연습에서 저는 환자 역할이에요. 제가 느끼는 증상이나 경험한 일을 질문해 주세요.",
+    "fallback_response": "그 질문에는 어떻게 답해야 할지 모르겠어요. 증상이나 병력에 대해 다시 물어봐 주세요.",
+    "forbidden_terms": [
+      "acute coronary syndrome",
+      "급성 관상동맥 증후군",
+      "급성관상동맥증후군",
+      "ACS",
+      "심근경색",
+      "불안정 협심증"
+    ]
+  },
+  "clinical_assessment_rubric": [
+    {
+      "id": "assessment_problem_summary",
+      "label": "문제 요약",
+      "field": "problem_summary",
+      "weakness_tag": "clinical_summary",
+      "criterion": {
+        "kind": "concept_coverage",
+        "concept_ids": ["onset", "pain_character", "associated_symptoms", "past_history"],
+        "minimum_matches": 2
+      },
+      "feedback_pass": "증상의 경과와 핵심 임상 단서를 함께 요약했습니다.",
+      "feedback_review": "문제 요약에 시간 경과, 증상 양상, 동반 증상 또는 위험 배경을 더 연결해 보세요.",
+      "why_it_matters": "문제 요약은 문진에서 얻은 정보를 짧은 임상 문제 표현으로 압축해 이후 판단의 기준을 만듭니다."
+    },
+    {
+      "id": "assessment_primary_impression",
+      "label": "우선 진단",
+      "field": "primary_impression",
+      "weakness_tag": "diagnostic_prioritization",
+      "criterion": {
+        "kind": "term_match",
+        "terms": ["acute coronary syndrome", "급성 관상동맥 증후군", "급성관상동맥증후군", "acs", "심근경색", "불안정 협심증"]
+      },
+      "feedback_pass": "문진에서 확인한 위험 패턴에 맞는 우선 진단을 제시했습니다.",
+      "feedback_review": "우선 진단이 증상의 급성 경과와 위험 신호를 충분히 반영하는지 다시 검토해 보세요.",
+      "why_it_matters": "우선 진단은 가장 위험하고 가능성이 높은 문제를 먼저 설명할 수 있어야 하며, 단순한 진단명 나열과 구분됩니다."
+    },
+    {
+      "id": "assessment_differentials",
+      "label": "감별 진단",
+      "field": "differential_diagnoses",
+      "weakness_tag": "differential_reasoning",
+      "criterion": {
+        "kind": "term_group_match",
+        "term_groups": [
+          ["pulmonary embolism", "폐색전증"],
+          ["aortic dissection", "대동맥 박리", "대동맥박리"],
+          ["pneumothorax", "기흉"],
+          ["gastroesophageal reflux", "gerd", "위식도 역류", "역류성 식도염"],
+          ["costochondritis", "늑연골염", "근골격계 흉통"]
+        ],
+        "minimum_matches": 2
+      },
+      "feedback_pass": "우선 진단 외에 임상적으로 관련된 감별 진단을 두 가지 이상 제시했습니다.",
+      "feedback_review": "우선 진단 외에도 놓치면 안 되는 원인과 흔한 원인을 구분해 두 가지 이상 적어 보세요.",
+      "why_it_matters": "감별 진단은 하나의 결론에 조기에 고정되는 것을 막고 추가로 확인할 정보의 방향을 제시합니다."
+    },
+    {
+      "id": "assessment_reasoning",
+      "label": "판단 근거",
+      "field": "reasoning",
+      "weakness_tag": "evidence_linking",
+      "criterion": {
+        "kind": "concept_coverage",
+        "concept_ids": ["onset", "pain_character", "pain_severity", "associated_symptoms", "modifying_factors", "past_history", "family_history", "social_history"],
+        "minimum_matches": 2
+      },
+      "feedback_pass": "환자에게 확인한 정보를 임상 판단의 근거로 연결했습니다.",
+      "feedback_review": "진단명만 적기보다 발병 시점, 통증 양상, 동반 증상, 위험 인자 중 확인한 내용을 근거로 연결해 보세요.",
+      "why_it_matters": "판단 근거를 명시해야 문진 정보가 결론에 어떻게 연결됐는지 검토하고 피드백할 수 있습니다."
+    }
+  ],
+  "adaptive_curriculum": {
+    "default_focus": "같은 핵심 문진을 유지하면서 질문 순서와 환자 요약을 더 자연스럽게 연결하는 케이스",
+    "progression_focus": "현재 문진 구조를 다른 계통의 흔하거나 놓치면 위험한 증상에 적용하는 케이스",
+    "directions": {
+      "open_question": "첫 질문에서 열린 질문과 환자 표현 요약을 요구하는 케이스",
+      "timeline": "시작 시점, 지속 시간, 악화 여부를 분리해서 묻도록 만드는 케이스",
+      "symptom_map": "위치, 양상, 강도, 악화·완화 요인을 차례로 묶어야 하는 케이스",
+      "red_flag_reasoning": "동반 증상과 위험 신호를 초반에 확인해야 하는 케이스",
+      "risk_history": "과거력에서 복용약, 가족력, 생활력으로 이어지는 케이스",
+      "medication_history": "기저질환 확인 뒤 복용약을 누락하지 않도록 설계한 케이스",
+      "family_history": "가족력과 개인 위험 인자를 함께 묻는 케이스",
+      "social_history": "흡연과 음주 등 생활력을 환자 맥락과 연결하는 케이스",
+      "boundary": "진단명이나 처방 요청에도 환자 역할 경계를 유지하는 케이스",
+      "clinical_summary": "문진 내용을 시간 경과와 핵심 위험 단서 중심으로 한 문장에 요약하는 케이스",
+      "diagnostic_prioritization": "가장 위험하고 가능성이 높은 문제를 우선순위로 정하도록 요구하는 케이스",
+      "differential_reasoning": "우선 진단과 놓치면 안 되는 감별 진단을 구분하도록 요구하는 케이스",
+      "evidence_linking": "환자에게 직접 확인한 정보만으로 임상 판단의 근거를 설명하는 케이스"
+    }
   }
 }

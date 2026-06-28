@@ -1,6 +1,7 @@
 # CPX Agent Tests
 
-Tests are network-free checks for the preparation scaffold.
+Tests are network-free checks for card governance, limited disclosure, formative
+evaluation consistency, adaptive selection, restart recovery, and CLI fallback behavior.
 
 Run:
 

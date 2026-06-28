@@ -125,12 +125,13 @@ def check_state() -> tuple[list[str], bool]:
     state_budget = cpx.get("project_structure", {}).get("state_budget", {})
     checks = {
         "active track is cpx_agent only": global_state.get("tracks", {}).get("active") == ["cpx_agent"],
-        "status is hackathon scaffold": cpx.get("status") == "hackathon_preparation_scaffold",
-        "app framework undecided": stance.get("app_framework_decided") is False,
-        "llm provider undecided": stance.get("llm_provider_decided") is False,
+        "status is functional vertical slice": cpx.get("status") == "functional_vertical_slice",
+        "app framework recorded": stance.get("app_framework_decided") is True,
+        "llm provider recorded": stance.get("llm_provider_decided") is True,
         "api key not required now": stance.get("api_key_required_now") is False,
-        "design priority recorded": stance.get("design_priority") == "ui_ux_quality_over_backend_completeness_for_demo",
-        "backend demo stance recorded": stance.get("backend_stance") == "demo_or_mocked_backend_until_day_of_requirements_are_known",
+        "design priority recorded": stance.get("design_priority") == "preserve_existing_visual_direction_after_functional_contract",
+        "backend stance recorded": stance.get("backend_stance")
+        == "standard_library_sqlite_session_service_with_card_driven_core",
         "real patient data disallowed": stance.get("real_patient_data_allowed") is False,
         "diagnosis/treatment product goal disabled": stance.get("diagnosis_or_treatment_product_goal") is False,
         "hidden diagnosis not shown": stance.get("hidden_diagnosis_may_be_shown_to_user") is False,
@@ -214,10 +215,12 @@ def check_app_setup() -> tuple[list[str], bool]:
         "serious simulation doc records pixel CPX direction": (
             "2D pixel" in serious and "CPX" in serious and "serious simulation" in serious
         ),
-        "serious simulation doc uses safe state wording": "Patient Stability" in serious and "Critical Safety Event" in serious,
+        "serious simulation doc records active free-text direction": (
+            "Free-text questioning" in serious and "Retired From The Active Contract" in serious
+        ),
         "serious simulation doc preserves hidden-field safety": "Hidden diagnosis" in serious and "evaluator keys" in serious,
-        "frontend stack doc records default React Vite path": "React + Vite + TypeScript" in frontend,
-        "frontend stack doc keeps framework undecided until scaffold": "app_framework_decided" in frontend and "false" in frontend,
+        "frontend stack doc records implemented minimal path": "plain HTML/CSS/JavaScript" in frontend,
+        "frontend stack doc records framework decision": "app_framework_decided" in frontend and "true" in frontend,
         "frontend stack doc blocks default heavy systems": "Do not add by default" in frontend and "Database" in frontend,
         "pixel pipeline doc records sprite metadata contract": "Metadata Contract" in pixel and "spritesheets" in pixel,
         "pixel pipeline doc uses CSS steps first": "CSS `steps()`" in pixel,
@@ -235,8 +238,11 @@ def check_app_setup() -> tuple[list[str], bool]:
         "state points to serious simulation direction": app_setup.get("serious_simulation_direction") == "docs/app/serious_simulation_direction.md",
         "state points to frontend stack decision": app_setup.get("frontend_stack_decision") == "docs/app/frontend_stack_decision.md",
         "state points to pixel asset pipeline": app_setup.get("pixel_asset_pipeline") == "docs/app/pixel_asset_pipeline.md",
-        "state records default frontend path": app_setup.get("default_frontend_path") == "react_vite_typescript_until_scaffold_or_day_of_switch_condition",
-        "state records pixel asset contract": app_setup.get("pixel_asset_contract") == "sprite_sheets_with_metadata_css_steps_first",
+        "state records default frontend path": app_setup.get("default_frontend_path") == "vanilla_html_css_js_with_python_service",
+        "state records pixel asset contract": (
+            app_setup.get("pixel_asset_contract")
+            == "individual_png_css_backgrounds_future_spritesheet_metadata"
+        ),
         "state keeps optional MCP disabled": app_setup.get("keep_disabled_by_default") is True,
     }
     for label, result in checks.items():
@@ -361,12 +367,12 @@ def check_project_state_cli() -> tuple[list[str], bool]:
     passed = True
     commands = [
         (["--print-root-summary"], "cpx_agent"),
-        (["--print-track-summary", "cpx_agent"], "hackathon_preparation_scaffold"),
+        (["--print-track-summary", "cpx_agent"], "functional_vertical_slice"),
         (["--print-session-start", "cpx_agent", "--repo-path", "cpx_agent/prompts/patient_role.md"], "patient_card_driven"),
         (["--print-resource", "app://design"], "Token Contract"),
-        (["--print-resource", "app://serious-simulation-direction"], "Patient Stability"),
-        (["--print-resource", "app://frontend-stack-decision"], "React + Vite + TypeScript"),
-        (["--print-resource", "app://pixel-asset-pipeline"], "sprite sheets"),
+        (["--print-resource", "app://serious-simulation-direction"], "Free-text questioning"),
+        (["--print-resource", "app://frontend-stack-decision"], "plain HTML/CSS/JavaScript"),
+        (["--print-resource", "app://pixel-asset-pipeline"], "individual PNG"),
         (["--print-resource", "app://visual-quality-bar"], "Anti-AI Rules"),
         (["--print-validation-for", "cpx_agent/prompts/patient_role.md"], "prompt"),
     ]

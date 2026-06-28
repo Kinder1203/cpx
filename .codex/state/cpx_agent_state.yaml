@@ -1,8 +1,8 @@
 schema_version: 1
-last_reviewed: 2026-06-26
+last_reviewed: 2026-06-28
 owner: user
 track: cpx_agent
-status: hackathon_preparation_scaffold
+status: functional_vertical_slice
 
 source_of_truth:
   root_readme: README.md
@@ -23,17 +23,44 @@ source_of_truth:
   app_pixel_asset_pipeline: docs/app/pixel_asset_pipeline.md
   app_design_reference_intake: docs/app/design_reference_intake.md
   app_visual_quality_bar: docs/app/visual_quality_bar.md
+  runtime_core: cpx_agent/src
+  browser_client: app
+  android_runner: android
 
 current_stance:
   event: 2026 CODE MEDI medical AI/SW hackathon
   expected_product: LLM 기반 CPX 표준화 환자 에이전트
-  stage: rough_vibe_coding_setup
+  stage: harness_backed_functional_vertical_slice
   app_direction: 2d_pixel_cpx_serious_simulation
-  design_priority: ui_ux_quality_over_backend_completeness_for_demo
-  backend_stance: demo_or_mocked_backend_until_day_of_requirements_are_known
+  design_priority: preserve_existing_visual_direction_after_functional_contract
+  backend_stance: standard_library_sqlite_session_service_with_card_driven_core
+  learner_input_mode: single_free_text_question
+  evaluation_mode: deterministic_card_defined_rules_with_disclosed_evidence_only
+  adaptive_mode: deterministic_dual_mode_release_eligible_card_library_selection
+  patient_card_count: 2
+  demo_only_card_count: 2
+  clinically_validated_card_count: 0
+  patient_card_schema_version: 1.2.0
+  session_persistence: local_sqlite_snapshot_and_event_log
+  evaluation_scope: versioned_card_based_formative_not_formally_validated
+  learner_assessment_fields:
+    - problem_summary
+    - primary_impression
+    - differential_diagnoses
+    - reasoning
+  retired_ui_concepts:
+    - mission_map
+    - structured_question_cards
+    - patient_stability_trust_risk_hud
+    - turn_counter
+    - pre_reasoning_decision_board
   app_setup_profile: lightweight_docs_first_optional_mcp
-  app_framework_decided: false
-  llm_provider_decided: false
+  app_framework_decided: true
+  llm_provider_decided: true
+  llm_provider: codex_cli_optional_concept_matcher
+  codex_reasoning_effort: low
+  codex_timeout_seconds: 8
+  codex_resilience: deterministic_fallback_cache_and_circuit_breaker
   api_key_required_now: false
   real_patient_data_allowed: false
   diagnosis_or_treatment_product_goal: false
@@ -48,10 +75,17 @@ cpx_contract:
   evaluate_after_encounter: true
   supports_day_of_case_swap: true
   required_patient_card_sections:
+    - schema_version
+    - publication
+    - evidence
+    - evaluation_metadata
+    - curriculum_metadata
     - patient_profile
     - disclosure_policy
     - conversation_style
     - cpx_checklist
+    - clinical_assessment_rubric
+    - adaptive_curriculum
     - safety_notes
 
 prompt_contract:
@@ -88,6 +122,12 @@ project_structure:
   generated_artifacts:
     - cpx_agent/data/sessions
     - cpx_agent/data/reports
+  runtime_modules:
+    - cpx_agent/src/cpx_core.py
+    - cpx_agent/src/cpx_service.py
+    - cpx_agent/src/cpx_server.py
+    - cpx_agent/src/codex_patient.py
+    - cpx_agent/src/session_store.py
   state_budget:
     active_state_soft_max_lines: 800
     active_state_soft_max_kib: 36
@@ -105,8 +145,9 @@ app_setup:
   pixel_asset_pipeline: docs/app/pixel_asset_pipeline.md
   design_reference_intake: docs/app/design_reference_intake.md
   visual_quality_bar: docs/app/visual_quality_bar.md
-  default_frontend_path: react_vite_typescript_until_scaffold_or_day_of_switch_condition
-  pixel_asset_contract: sprite_sheets_with_metadata_css_steps_first
+  default_frontend_path: vanilla_html_css_js_with_python_service
+  android_runner: webview_to_host_service
+  pixel_asset_contract: individual_png_css_backgrounds_future_spritesheet_metadata
   optional_mcp_profile: .codex/mcp_profiles/app_ui_optional.toml
   default_tooling: docs_first_harness_first_cli_first
   playwright_mcp: optional_for_persistent_browser_state_or_long_ui_loops_not_default

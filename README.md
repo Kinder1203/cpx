@@ -2,10 +2,10 @@
 
 ## App Setup
 
-App planning lives under `docs/app/`. These files define the lightweight PRD,
-functional spec, user flows, wireframes, design contract, and optional UI MCP
-profile direction for the hackathon app. They are planning contracts, not an
-implemented app stack.
+App planning lives under `docs/app/`. The functional vertical slice lives in
+`app/`, its Python session service in `cpx_agent/src/`, and the Android Studio
+runner in `android/`. Planning documents remain product contracts rather than
+runtime sources.
 
 Playwright MCP and Figma MCP are not active by default. Optional configuration
 snippets live in `.codex/mcp_profiles/app_ui_optional.toml` and must remain
@@ -19,7 +19,7 @@ task-routed so token budget, auto-compaction, and plugin limits stay intact.
 
 ## Current Boundary
 
-- 앱 구현은 아직 최소 준비 단계다.
+- 앱은 범용 환자 카드 코어와 동일 출처 API를 연결한 최소 기능 단계다.
 - 핵심 준비물은 환자 카드, 환자 역할 프롬프트, CPX 평가 기준, 대화 상태,
   안전장치, 검증 하네스다.
 - 실제 진단, 치료 권고, 의료 상담 서비스를 목표로 하지 않는다.

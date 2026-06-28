@@ -1,70 +1,47 @@
 # Wireframes
 
-텍스트 와이어프레임은 프레임워크 결정 전 layout contract다. 실제 구현 전에는
-Figma나 코드 기반 UI에서 이 구조를 다시 검증한다.
+이 문서는 현재 학습자 화면의 정보 구조만 정의한다. 내부 평가 개념 수, 역할 경계
+불변식, fixture 준비 상태는 학습자용 상시 상태 표시가 아니다.
 
-## Desktop MVP
-
-```text
-┌────────────────────────────────────────────────────────────────────┐
-│ CODE MEDI CPX                         Case: Safe metadata only      │
-├───────────────────────┬────────────────────────────────────────────┤
-│ Case Setup            │ Encounter                                  │
-│ - Card status         │ ┌────────────────────────────────────────┐ │
-│ - Required fields     │ │ transcript messages                    │ │
-│ - Start / Reset       │ │ patient answers                        │ │
-│                       │ └────────────────────────────────────────┘ │
-│ Safety Flags          │ [ student question input              ][>] │
-│ - no hidden diagnosis │                                            │
-├───────────────────────┴────────────────────────────────────────────┤
-│ Evaluation Report: checklist coverage | missed items | safety notes │
-└────────────────────────────────────────────────────────────────────┘
-```
-
-## Mobile MVP
+## Desktop
 
 ```text
-┌──────────────────────────────┐
-│ CODE MEDI CPX                │
-│ Case status + session state  │
-├──────────────────────────────┤
-│ Transcript                   │
-│                              │
-├──────────────────────────────┤
-│ Input + send                 │
-├──────────────────────────────┤
-│ Evaluation tab after finish  │
-└──────────────────────────────┘
++-----------------------------------------------------------------------+
+| CODE MEDI CPX ROOM                              safe case metadata     |
++-----------------------------------------------------------------------+
+|                                                                       |
+|  patient scene               recent patient / learner dialogue        |
+|                                                                       |
++-----------------------------------------------------------------------+
+| [ free-text patient question                                  ][send] |
+| [start/reset]                                           [review notes]|
++-----------------------------------------------------------------------+
 ```
 
-## Pixel Serious Simulation Desktop
+문진 정리 동작은 먼저 임상 판단 작성 sheet를 연다. 제출 후 같은 범위 안에서
+리포트 sheet를 연다. 확인할 피드백 목록은 고정된 목록 영역 안에서 독립 스크롤하고,
+상세 내용은 별도 영역에서 스크롤한다. 일반 문진 화면의 남는 높이는 환자 장면이
+흡수하며 헤더·안내·입력 영역의 크기와 기존 시각 언어는 유지한다.
+
+## Mobile / Android
 
 ```text
-+--------------------------------------------------------------------------------+
-| CODE MEDI CPX Mission        Safe case metadata            Stability Trust Risk |
-+---------------------------+----------------------------------------------------+
-| Mission Map / Case Brief   | Patient sprite + response bubble                  |
-| - mission objective        |        [upper-left patient]                       |
-| - skill focus              |                                                    |
-| - card validation          |                                                    |
-| - safe warnings            |                         [lower-right doctor back] |
-+---------------------------+----------------------------------------------------+
-| Question cards / free-input assist / selected action                            |
-+--------------------------------------------------------------------------------+
-| Transcript drawer or compact log                         End | Decision Board   |
-+--------------------------------------------------------------------------------+
-| CPX Report after finish: checklist | missed red flags | communication | next     |
-+--------------------------------------------------------------------------------+
++----------------------------------+
+| CODE MEDI CPX | safe metadata    |
++----------------------------------+
+| patient scene                    |
+| recent dialogue                  |
++----------------------------------+
+| free-text question        [send] |
+| start/reset       review notes   |
++----------------------------------+
 ```
-
-The encounter scene is the signature surface. The transcript supports the scene but should
-not make the product feel like a plain chatbot.
 
 ## Interaction Notes
 
-- Case setup and evaluation may be tabs on small screens.
-- Encounter input must stay visible and must not overlap transcript content.
-- Hidden/internal fields are never rendered as labels, tooltips, raw JSON, debug panels, or
-  downloadable artifacts.
-- If a visual design system is adopted, this wireframe remains the minimum information
-  architecture.
+- 입력과 주요 동작은 앱 프레임 안에 항상 도달 가능해야 한다.
+- 전체 대화, 카드 준비 정보, 리포트는 독립된 sheet/modal로 연다.
+- 내부 checklist 진행률을 학습자에게 표시하지 않는다.
+- 안전 경계는 구현 불변식이며 실제 이벤트가 있을 때만 경고한다.
+- 질문 카드와 상태 게이지는 현재 화면 계약에 포함하지 않는다.
+- hidden/internal fields는 DOM, raw JSON, 다운로드, 스크린샷에 노출하지 않는다.

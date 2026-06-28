@@ -1,5 +1,5 @@
 schema_version: 1
-last_reviewed: 2026-06-26
+last_reviewed: 2026-06-27
 owner: user
 source_of_truth:
   root_agents: AGENTS.md
@@ -112,6 +112,31 @@ entries:
       - cpx_agent/docs/cpx_protocol.md
       - .codex/state/cpx_agent_state.yaml
     notes: app planning docs must preserve CPX safety and lightweight setup boundaries
+  - prefix: app/
+    track: cpx_agent
+    commands:
+      - python tools/healthcheck.py
+      - python -m unittest discover -s cpx_agent/tests -p "test_*.py"
+    docs_to_reopen:
+      - docs/app/README.md
+      - docs/app/wireframes.md
+      - docs/app/design.md
+      - docs/app/visual_quality_bar.md
+      - cpx_agent/docs/cpx_protocol.md
+      - .codex/state/cpx_agent_state.yaml
+    notes: browser client must stay API-driven, patient-role only, and free of patient answers or hidden case solutions
+  - prefix: android/
+    track: cpx_agent
+    commands:
+      - python tools/healthcheck.py
+      - python -m unittest discover -s cpx_agent/tests -p "test_*.py"
+      - android\gradlew.bat :app:assembleDebug
+    docs_to_reopen:
+      - android/README.md
+      - app/README.md
+      - cpx_agent/docs/cpx_protocol.md
+      - .codex/state/cpx_agent_state.yaml
+    notes: Android Studio runner must contain no patient card, evaluation key, or learner profile data
   - prefix: .codex/state/
     track: root
     commands:

@@ -16,6 +16,16 @@ dist/
 build/
 .next/
 
+# Local IDE and tool state
+.idea/
+.gradle/
+.serena/
+
+# Generated UI QA artifacts
+output/
+test-results/
+.playwright-cli/
+
 # Generated CPX artifacts
 cpx_agent/data/sessions/*
 !cpx_agent/data/sessions/README.md

@@ -1,35 +1,31 @@
 # Frontend Stack Decision
 
-This document records the default implementation path for the future CODE MEDI CPX app.
-It is a decision aid, not an instruction to scaffold the app before the day-of requirements
-are known.
+This document records the implementation path for the CODE MEDI CPX functional vertical slice.
 
 ## Decision Status
 
-- Status: default path selected, app framework not yet scaffolded.
-- Default path: React + Vite + TypeScript.
+- Status: minimal functional slice implemented.
+- Default path: plain HTML/CSS/JavaScript client, Python standard-library service, and Android WebView runner.
 - Source of truth status: subordinate to `docs/app/wireframes.md`, `docs/app/design.md`,
   and `cpx_agent/docs/cpx_protocol.md`.
-- State flag: `app_framework_decided` remains `false` until code is scaffolded.
+- State flag: `app_framework_decided` is `true` for the current vertical slice.
 
 ## Why This Default
 
-The app is expected to be a client-heavy CPX serious simulation surface: pixel encounter
-scene, transcript, selected or free-form questions, patient state indicators, evaluation
-report, and demo-friendly mocked backend behavior.
+The current app is a focused CPX serious simulation surface: pixel encounter scene,
+free-form questions, transcript, evaluation report, and a real card-driven local service.
 
-React + Vite + TypeScript is the preferred default because it supports fast local iteration,
-simple static builds, strong component ergonomics, and a thin integration layer over the CPX
-harness. It avoids committing to server routing, auth, database, deployment, or framework
-conventions before the hackathon topic and constraints are known.
+Plain browser code is sufficient for the current single-screen flow and keeps the patient
+card, matching, evaluation, and learner profile on the Python service. Android Studio runs
+the same client in a WebView instead of duplicating domain logic in the app.
 
 ## Stack Contract
 
-If the app is scaffolded under this default, start with:
+The implemented stack uses:
 
-- React for component composition and stateful interaction.
-- Vite for local dev server, HMR, and static production build.
-- TypeScript for patient-card, encounter-state, report, and sprite metadata contracts.
+- HTML/CSS/JavaScript for the thin client.
+- Python standard library for the session API and static serving.
+- Java WebView for the Android Studio runner.
 - CSS custom properties for design tokens.
 - Tailwind or utility classes only if they map to the token contract instead of replacing it.
 - Lucide icons for common commands when an icon exists.
@@ -59,35 +55,26 @@ Use PixiJS, Phaser, or another rendering library if:
   layered particle effects, or timeline-heavy game logic.
 - CSS sprite animation cannot keep the pixel scene stable and performant.
 
-Use plain HTML/CSS/JS only if:
+Keep plain HTML/CSS/JS while:
 
-- The demo narrows to a static prototype or single-screen exhibit where React state management
-  would slow the team down.
+- The app remains a focused encounter and report flow without complex client routing.
 
 ## Implementation Shape
 
-Preferred first scaffold:
+Current implementation:
 
 ```text
 app/
-  src/
-    app/
-      App.tsx
-      routes or screens
-    components/
-      cpx/
-      simulation/
-      report/
-      ui/
-    data/
-      demoPatientCard.ts
-    styles/
-      tokens.css
-      global.css
-    types/
-      patientCard.ts
-      encounter.ts
-      pixelAsset.ts
+  index.html
+  app.js
+  styles.css
+cpx_agent/src/
+  cpx_core.py
+  cpx_service.py
+  cpx_server.py
+  codex_patient.py
+android/
+  app/
 ```
 
 The first implemented screen should be the CPX working surface, not a landing page.
@@ -99,16 +86,14 @@ Before accepting the scaffold:
 - The first viewport shows the encounter surface and safe case metadata.
 - Hidden diagnosis, evaluator keys, internal prompts, and raw patient-card internals are not
   rendered in UI, DOM-visible debug JSON, screenshots, downloads, or logs intended for demo.
-- Desktop and mobile layouts keep the transcript, input, patient state, and main action visible
+- Desktop and mobile layouts keep the transcript, input, and main action visible
   without overlap.
-- The app can run with mocked patient response and mocked evaluation data before any API key.
+- The app can run deterministically without Codex and can optionally classify unmatched questions through Codex CLI.
 - UI QA has a clear path through Playwright CLI or in-app browser screenshots.
 
 ## Deferred Decisions
 
-- Actual scaffold timing.
-- Package manager.
 - Deployment target.
-- LLM provider and API key setup.
+- Hosted LLM provider and credential setup.
 - Whether Tailwind is used in code.
 - Whether a game rendering library is justified.

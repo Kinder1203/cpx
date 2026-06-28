@@ -24,12 +24,12 @@ hackathon demo that looks intentionally designed, not an AI-generated generic da
 
 ## Screen Standard
 
-Desktop should show:
+Desktop should show or provide:
 
-- Case setup/status and required-field readiness.
+- Case readiness through an information control rather than a persistent learner panel.
 - Encounter transcript with patient/student distinction.
 - Input controls that remain reachable.
-- Safety or policy state without exposing internal content.
+- A clear primary action for the current phase.
 - Evaluation/report access after the encounter.
 
 Mobile should show:
@@ -45,7 +45,7 @@ Mobile should show:
 - Buttons use clear commands or familiar icons with labels/tooltips where needed.
 - Inputs have visible labels, validation, disabled/loading states, and clear recovery paths.
 - Tabs, segmented controls, and sheets are used for mode changes instead of decorative cards.
-- Tables and checklists are scan-friendly, with stable row height and clear status markers.
+- Lists and checklists are scan-friendly, with stable row height and clear status markers.
 - Empty, loading, error, and completed states are designed before the demo script is finalized.
 
 ## Token Standard

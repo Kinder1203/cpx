@@ -3,30 +3,19 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import sys
 from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from cpx_agent.src.cpx_core import patient_card_errors
+
+
 PATIENT_PROMPT = ROOT / "cpx_agent" / "prompts" / "patient_role.md"
 EVALUATOR_PROMPT = ROOT / "cpx_agent" / "prompts" / "evaluator.md"
-
-REQUIRED_TOP_LEVEL = {
-    "case_id",
-    "title",
-    "patient_profile",
-    "disclosure_policy",
-    "conversation_style",
-    "cpx_checklist",
-    "safety_notes",
-}
-
-REQUIRED_PROFILE = {
-    "name",
-    "age",
-    "sex",
-    "chief_complaint",
-    "hidden_diagnosis",
-}
 
 
 def load_patient_card(path: Path) -> dict[str, Any]:
@@ -37,47 +26,7 @@ def load_patient_card(path: Path) -> dict[str, Any]:
 
 
 def validate_patient_card(card: dict[str, Any]) -> list[str]:
-    errors: list[str] = []
-    missing = sorted(REQUIRED_TOP_LEVEL - set(card))
-    if missing:
-        errors.append(f"missing top-level keys: {missing}")
-
-    profile = card.get("patient_profile")
-    if not isinstance(profile, dict):
-        errors.append("patient_profile must be an object")
-    else:
-        missing_profile = sorted(REQUIRED_PROFILE - set(profile))
-        if missing_profile:
-            errors.append(f"missing patient_profile keys: {missing_profile}")
-
-    policy = card.get("disclosure_policy")
-    if not isinstance(policy, dict):
-        errors.append("disclosure_policy must be an object")
-    else:
-        never = policy.get("never_disclose")
-        if not isinstance(never, list):
-            errors.append("disclosure_policy.never_disclose must be a list")
-        elif "hidden_diagnosis" not in never:
-            errors.append("hidden_diagnosis must be listed in never_disclose")
-
-    checklist = card.get("cpx_checklist")
-    if not isinstance(checklist, list) or not checklist:
-        errors.append("cpx_checklist must be a non-empty list")
-    else:
-        for index, item in enumerate(checklist):
-            if not isinstance(item, dict) or not item.get("id") or not item.get("label"):
-                errors.append(f"cpx_checklist item {index} must include id and label")
-
-    safety = card.get("safety_notes")
-    if not isinstance(safety, dict):
-        errors.append("safety_notes must be an object")
-    else:
-        if safety.get("do_not_reveal_hidden_diagnosis") is not True:
-            errors.append("safety_notes.do_not_reveal_hidden_diagnosis must be true")
-        if safety.get("do_not_offer_treatment") is not True:
-            errors.append("safety_notes.do_not_offer_treatment must be true")
-
-    return errors
+    return patient_card_errors(card)
 
 
 def render_prompt(template_path: Path, card: dict[str, Any], transcript: str | None = None) -> str:
