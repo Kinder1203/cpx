@@ -81,7 +81,7 @@ def main() -> int:
         timeout=30,
         check=False,
     )
-    state_ok = completed.returncode == 0 and "patient_card_driven" in completed.stdout
+    state_ok = completed.returncode == 0 and "case_db_driven" in completed.stdout
     ok &= state_ok
     print(_line(state_ok, "project-state session-start works"))
 

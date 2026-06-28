@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import subprocess
 import sys
 import tomllib
@@ -44,8 +45,12 @@ REQUIRED_PATHS = [
     "cpx_agent/prompts/evaluator.md",
     "cpx_agent/prompts/safety.md",
     "cpx_agent/data/README.md",
-    "cpx_agent/data/patient_cards/chest_pain_example.json",
+    "cpx_agent/data/bad_news/checklist_reference.json",
+    "cpx_agent/data/bad_news/cases/B05-breast-cancer.json",
+    "cpx_agent/data/bad_news/cases_archive_v1/N07-lung-cancer.json",
+    "cpx_agent/src/bad_news_backend.py",
     "cpx_agent/tests/README.md",
+    "cpx_agent/tests/test_bad_news_backend.py",
     "docs/app/README.md",
     "docs/app/prd.md",
     "docs/app/functional_spec.md",
@@ -127,15 +132,21 @@ def check_state() -> tuple[list[str], bool]:
         "active track is cpx_agent only": global_state.get("tracks", {}).get("active") == ["cpx_agent"],
         "status is functional vertical slice": cpx.get("status") == "functional_vertical_slice",
         "app framework recorded": stance.get("app_framework_decided") is True,
-        "llm provider recorded": stance.get("llm_provider_decided") is True,
-        "api key not required now": stance.get("api_key_required_now") is False,
+        "confirmed topic is bad news delivery": stance.get("confirmed_topic") == "bad_news_delivery",
+        "imported patient utterance owner recorded": stance.get("patient_utterance_owner")
+        == "integrated_openai_patient_role_from_imported_backend",
+        "codex runtime model calls not required": stance.get("codex_cli_model_calls_required") is False,
+        "api key required for live imported backend": stance.get("api_key_required_now") is True,
         "design priority recorded": stance.get("design_priority") == "preserve_existing_visual_direction_after_functional_contract",
         "backend stance recorded": stance.get("backend_stance")
-        == "standard_library_sqlite_session_service_with_card_driven_core",
+        == "imported_2026_code_medi_bad_news_case_db_with_stdlib_http_adapter",
+        "bad-news ready case count recorded": stance.get("bad_news_ready_case_count") == 10,
+        "bad-news checkpoint evaluation recorded": stance.get("evaluation_mode")
+        == "imported_llm_checklist_and_ppi_checkpoint_scoring",
         "real patient data disallowed": stance.get("real_patient_data_allowed") is False,
         "diagnosis/treatment product goal disabled": stance.get("diagnosis_or_treatment_product_goal") is False,
         "hidden diagnosis not shown": stance.get("hidden_diagnosis_may_be_shown_to_user") is False,
-        "patient-card driven": contract.get("patient_card_driven") is True,
+        "bad-news case DB driven": contract.get("case_db_driven") is True,
         "patient role only": contract.get("patient_role_only") is True,
         "reveal only when asked": contract.get("reveal_only_when_asked") is True,
         "evaluate after encounter": contract.get("evaluate_after_encounter") is True,
@@ -203,6 +214,7 @@ def check_app_setup() -> tuple[list[str], bool]:
     cpx = _yaml(".codex/state/cpx_agent_state.yaml")
     app_setup = cpx.get("app_setup", {})
     checks = {
+        "app docs mention imported bad-news backend": "2026-CODE-MEDI bad-news" in app_readme,
         "app docs mention Playwright": "Playwright" in app_readme,
         "app docs mention Figma": "Figma" in app_readme,
         "PRD records non-goals": "Non-Goals" in prd,
@@ -311,13 +323,13 @@ def check_codex_config() -> tuple[list[str], bool]:
     return lines, passed
 
 
-def check_patient_card_harness() -> tuple[list[str], bool]:
+def check_prompt_harness() -> tuple[list[str], bool]:
     result = subprocess.run(
         [
             sys.executable,
             "tools/prompt_harness.py",
-            "--patient-card",
-            "cpx_agent/data/patient_cards/chest_pain_example.json",
+            "--bad-news-case",
+            "B05-breast-cancer",
             "--validate-only",
         ],
         cwd=ROOT,
@@ -327,8 +339,71 @@ def check_patient_card_harness() -> tuple[list[str], bool]:
         timeout=30,
         check=False,
     )
-    ok = result.returncode == 0 and "OK patient card valid" in result.stdout
-    return [_line(ok, "prompt harness validates sample patient card")], ok
+    ok = result.returncode == 0 and "OK bad-news case valid" in result.stdout
+    return [_line(ok, "prompt harness validates imported bad-news case")], ok
+
+
+def check_bad_news_backend_data() -> tuple[list[str], bool]:
+    lines: list[str] = []
+    passed = True
+    data_root = ROOT / "cpx_agent" / "data" / "bad_news"
+    checklist_path = data_root / "checklist_reference.json"
+    cases_dir = data_root / "cases"
+    archive_dir = data_root / "cases_archive_v1"
+    source_path = ROOT / "cpx_agent" / "src" / "bad_news_backend.py"
+    tests_path = ROOT / "cpx_agent" / "tests" / "test_bad_news_backend.py"
+
+    checks: dict[str, bool] = {
+        "bad-news checklist exists": checklist_path.exists(),
+        "bad-news cases dir exists": cases_dir.exists(),
+        "bad-news archive dir exists": archive_dir.exists(),
+        "bad-news backend adapter exists": source_path.exists(),
+        "bad-news backend tests exist": tests_path.exists(),
+    }
+    try:
+        checklist = json.loads(checklist_path.read_text(encoding="utf-8"))
+        cases = [
+            json.loads(path.read_text(encoding="utf-8"))
+            for path in sorted(cases_dir.glob("*.json"))
+        ]
+        archive_cases = list(archive_dir.glob("*.json"))
+        core_ids = set(checklist.get("core_checklist", {}))
+        emotion_values = checklist.get("emotion_checklists", {}).values()
+        emotion_item_ids = {
+            item_id
+            for value in emotion_values
+            if isinstance(value, dict)
+            for item_id in value.get("items", {})
+        }
+        checks.update(
+            {
+                "bad-news ready case count is 10": len(cases) == 10,
+                "bad-news archive case count is 11": len(archive_cases) == 11,
+                "all imported cases ready for play": all(
+                    case.get("ready_for_play") is True
+                    for case in cases
+                ),
+                "bad-news checklist includes core checkpoint E2-4": "E2-4" in core_ids,
+                "bad-news checklist includes anger emotion rubric": {"A1", "A2"}.issubset(
+                    emotion_item_ids
+                ),
+            }
+        )
+    except Exception:
+        checks.update(
+            {
+                "bad-news ready case count is 10": False,
+                "bad-news archive case count is 11": False,
+                "all imported cases ready for play": False,
+                "bad-news checklist includes core checkpoint E2-4": False,
+                "bad-news checklist includes anger emotion rubric": False,
+            }
+        )
+
+    for label, result in checks.items():
+        passed &= result
+        lines.append(_line(result, label))
+    return lines, passed
 
 
 def check_validation_routes() -> tuple[list[str], bool]:
@@ -338,8 +413,10 @@ def check_validation_routes() -> tuple[list[str], bool]:
         "README.md",
         "cpx_agent/docs/cpx_protocol.md",
         "cpx_agent/prompts/patient_role.md",
-        "cpx_agent/data/patient_cards/chest_pain_example.json",
-        "cpx_agent/tests/test_patient_card.py",
+        "cpx_agent/data/bad_news/checklist_reference.json",
+        "cpx_agent/data/bad_news/cases/B05-breast-cancer.json",
+        "cpx_agent/src/bad_news_backend.py",
+        "cpx_agent/tests/test_bad_news_backend.py",
         "docs/app/design.md",
         "docs/app/serious_simulation_direction.md",
         "docs/app/frontend_stack_decision.md",
@@ -368,7 +445,7 @@ def check_project_state_cli() -> tuple[list[str], bool]:
     commands = [
         (["--print-root-summary"], "cpx_agent"),
         (["--print-track-summary", "cpx_agent"], "functional_vertical_slice"),
-        (["--print-session-start", "cpx_agent", "--repo-path", "cpx_agent/prompts/patient_role.md"], "patient_card_driven"),
+        (["--print-session-start", "cpx_agent", "--repo-path", "cpx_agent/src/bad_news_backend.py"], "case_db_driven"),
         (["--print-resource", "app://design"], "Token Contract"),
         (["--print-resource", "app://serious-simulation-direction"], "Free-text questioning"),
         (["--print-resource", "app://frontend-stack-decision"], "plain HTML/CSS/JavaScript"),
@@ -453,7 +530,8 @@ def main() -> int:
         ("Skills", check_skills),
         ("MCP", check_mcp),
         ("Codex Config", check_codex_config),
-        ("Prompt Harness", check_patient_card_harness),
+        ("Prompt Harness", check_prompt_harness),
+        ("Bad-News Backend Data", check_bad_news_backend_data),
         ("Validation Routing", check_validation_routes),
         ("Project State", check_project_state_cli),
         ("Bootstrap", check_bootstrap_cli),

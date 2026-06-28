@@ -13,10 +13,10 @@ This document records the implementation path for the CODE MEDI CPX functional v
 ## Why This Default
 
 The current app is a focused CPX serious simulation surface: pixel encounter scene,
-free-form questions, transcript, evaluation report, and a real card-driven local service.
+free-form questions, transcript, evaluation report, and the imported bad-news local service.
 
 Plain browser code is sufficient for the current single-screen flow and keeps the patient
-card, matching, evaluation, and learner profile on the Python service. Android Studio runs
+case DB, patient-role LLM call, evaluation, and report generation on the Python service. Android Studio runs
 the same client in a WebView instead of duplicating domain logic in the app.
 
 ## Stack Contract
@@ -69,10 +69,8 @@ app/
   app.js
   styles.css
 cpx_agent/src/
-  cpx_core.py
-  cpx_service.py
+  bad_news_backend.py
   cpx_server.py
-  codex_patient.py
 android/
   app/
 ```
@@ -84,11 +82,11 @@ The first implemented screen should be the CPX working surface, not a landing pa
 Before accepting the scaffold:
 
 - The first viewport shows the encounter surface and safe case metadata.
-- Hidden diagnosis, evaluator keys, internal prompts, and raw patient-card internals are not
+- Hidden diagnosis, evaluator keys, internal prompts, and raw case internals are not
   rendered in UI, DOM-visible debug JSON, screenshots, downloads, or logs intended for demo.
 - Desktop and mobile layouts keep the transcript, input, and main action visible
   without overlap.
-- The app can run deterministically without Codex and can optionally classify unmatched questions through Codex CLI.
+- The app can run without Codex CLI runtime model calls.
 - UI QA has a clear path through Playwright CLI or in-app browser screenshots.
 
 ## Deferred Decisions

@@ -1,7 +1,8 @@
 # CPX Agent Tests
 
-Tests are network-free checks for card governance, limited disclosure, formative
-evaluation consistency, adaptive selection, restart recovery, and CLI fallback behavior.
+Tests are network-free checks for the imported bad-news backend, limited
+disclosure, checkpoint/PPI report consistency, app API contract, and UI bundle
+guardrails.
 
 Run:
 

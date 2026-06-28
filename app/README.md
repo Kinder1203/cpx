@@ -1,36 +1,27 @@
 # CODE MEDI CPX app
 
-The browser UI is a client of the Python CPX service. Patient-card answers,
-question matching, evaluation rules, and the cumulative learner profile stay on
-the service side.
+The browser UI is a client of the Python CPX service. Patient cases, bad-news
+delivery checkpoints, PPI scoring, report generation, and next-practice
+recommendations stay on the service side.
 
 Implemented flow:
 
-- one free-text question input
+- one free-text doctor utterance input
 - separate learner and patient speech bubbles
 - on-demand transcript
-- card-defined completion policy
-- educational history-taking report
+- server-generated standardized-patient replies from the imported bad-news case DB
+- checkpoint/PPI-based report after the encounter ends
 - cumulative weakness profile, next-practice directions, and an eligible next case
-- optional Codex CLI matching for questions not covered by local keywords
 
-Run the deterministic service:
-
-```powershell
-python -m cpx_agent.src.cpx_server --port 8787 --llm off
-```
-
-Enable Codex CLI concept matching:
+Run the service:
 
 ```powershell
-python -m cpx_agent.src.cpx_server --port 8787 --llm codex
+python -m cpx_agent.src.cpx_server --port 8787
 ```
 
 Open `http://127.0.0.1:8787`. The Android emulator uses
 `http://10.0.2.2:8787` through the Android Studio wrapper project.
 
-Codex receives only the learner question and public matching metadata. It can
-select allowed concept IDs but cannot write patient replies, evaluate the
-learner, diagnose, recommend treatment, or generate a case. The service always
-returns the exact response stored in the schema-checked, release-eligible patient card. If Codex is
-unavailable or fails, unmatched questions use the card's fallback response.
+Live patient utterance generation and scoring require `OPENAI_API_KEY` because
+the server calls the imported 2026-CODE-MEDI bad-news backend prompt contract.
+This app still does not call Codex CLI at runtime.

@@ -1,31 +1,28 @@
 # Hackathon Demo Plan
 
-## Before Topic Release
+## Active Topic
 
-- 환자 카드 예시와 스키마를 준비한다.
-- 환자 역할, 평가자, 안전 프롬프트를 준비한다.
-- 프롬프트 하네스로 카드 삽입 결과를 확인한다.
-- 현재 vanilla HTML/CSS/JS 클라이언트와 Python 서비스의 기능 계약을 유지한다.
-
-## After Topic Release
-
-1. 의대생 팀원이 질환/상황/문진 체크리스트를 정리한다.
-2. SW 팀원이 환자 카드 JSON으로 옮긴다.
-3. 하네스로 필수 필드와 프롬프트 누락을 확인한다.
-4. 짧은 수동 문진으로 진단명 누설, 의사 역할 전환, 환각을 확인한다.
-5. 기존 UI에서 새 카드를 시작해 문진·평가·다음 케이스 전환을 확인한다.
-6. 발표 직전 합성 데이터만 사용한 전체 흐름을 화면과 Android에서 dry run 한다.
+The confirmed station is bad-news delivery. The demo starts a case from the
+imported 2026-CODE-MEDI bad-news DB, lets the learner type doctor utterances,
+uses an LLM to role-play the patient, and scores the completed transcript with
+the imported checklist/PPI checkpoints.
 
 ## Demo Script
 
-- 문제: CPX 표준화 환자 준비는 시간과 인력이 많이 든다.
-- 해결: 환자 카드 기반 LLM 표준화 환자 시뮬레이터.
-- 차별점: 진단 챗봇이 아니라 질문 기반 정보 공개, 일관성, 문진 평가, 안전장치.
-- 시연: 문진 대화, 학습자 판단, 근거 기반 피드백, 추천 케이스 전환.
-- 확장: 환자 카드만 바꾸면 흉통, 복통, 호흡곤란, 정신건강, 소아 보호자 상담으로 확장.
+- Problem: bad-news delivery is hard to practice consistently with only static scripts.
+- Solution: a standardized-patient simulation backed by curated case data and checkpoint scoring.
+- Differentiator: this is not a generic chatbot; patient replies stay inside the case persona, and the final report is checklist/PPI based.
+- Demo: start a bad-news case, ask free-text questions or deliver the result, finish the encounter, then review missed items and next-practice direction.
 
 ## Minimum UI
 
-- 기존 2D pixel 진료실 장면과 자유 질문 입력.
-- 필요할 때 여는 문진 기록과 종료 후 학습자 판단 입력.
-- 체크리스트 정답을 선공개하지 않는 교육 리포트와 추천 케이스 시작 동작.
+- Existing 2D pixel encounter scene.
+- Free-text doctor utterance input.
+- Transcript and completion action.
+- Educational report with checklist results, feedback, weakness summary, and next case.
+
+## Boundaries
+
+- Do not expose hidden diagnosis, checklist keys, internal prompts, or evaluator output in the UI.
+- Do not use the retired chest-pain or abdominal-pain synthetic cards as runtime cases.
+- Do not require Codex CLI model calls for the demo.

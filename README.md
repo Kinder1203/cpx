@@ -1,61 +1,64 @@
 # CODE MEDI CPX Agent
 
+This repository is the CODE MEDI hackathon workspace for a CPX educational
+simulation. The active track is `cpx_agent/`.
+
 ## App Setup
 
 App planning lives under `docs/app/`. The functional vertical slice lives in
-`app/`, its Python session service in `cpx_agent/src/`, and the Android Studio
-runner in `android/`. Planning documents remain product contracts rather than
-runtime sources.
+`app/`, its Python service lives in `cpx_agent/src/`, and the Android Studio
+runner lives in `android/`. The Android project remains a WebView runner around
+the local service.
 
 Playwright MCP and Figma MCP are not active by default. Optional configuration
-snippets live in `.codex/mcp_profiles/app_ui_optional.toml` and must remain
-task-routed so token budget, auto-compaction, and plugin limits stay intact.
-
-이 저장소는 2026 의료 AI/SW 융합 해커톤 CODE MEDI 준비용 작업공간이다.
-
-목표는 특정 질환 하나를 미리 하드코딩하는 것이 아니라, 대회 당일 공개되는
-세부 주제에 맞춰 환자 카드만 바꾸면 작동하는 LLM 기반 CPX 표준화 환자
-에이전트 골격을 준비하는 것이다.
+snippets live in `.codex/mcp_profiles/app_ui_optional.toml`.
 
 ## Current Boundary
 
-- 앱은 범용 환자 카드 코어와 동일 출처 API를 연결한 최소 기능 단계다.
-- 핵심 준비물은 환자 카드, 환자 역할 프롬프트, CPX 평가 기준, 대화 상태,
-  안전장치, 검증 하네스다.
-- 실제 진단, 치료 권고, 의료 상담 서비스를 목표로 하지 않는다.
-- API 키, 비밀값, 실제 환자 데이터, 개인정보는 저장하지 않는다.
-- 당일 세부 주제 공개 전에는 질환별 로직보다 범용 구조를 우선한다.
+- Confirmed topic: bad-news delivery.
+- Active backend basis: copied 2026-CODE-MEDI bad-news case DB, patient-role LLM
+  prompt contract, checklist evaluator, and PPI evaluator.
+- Runtime server: `cpx_agent/src/cpx_server.py` using
+  `cpx_agent/src/bad_news_backend.py`.
+- Runtime data: `cpx_agent/data/bad_news/`.
+- Generated reports: `cpx_agent/data/reports/bad_news/`.
+- Live patient replies and scoring require `OPENAI_API_KEY`.
+- Codex CLI model calls are not part of the app runtime.
+- Real patient data, private student data, API keys, and secrets must not be
+  stored in the repo.
+
+The original source folder
+`C:\Users\user\Desktop\2026-CODE-MEDI\backend` is read-only for this project.
 
 ## Entry Points
 
-먼저 `AGENTS.md`를 읽는다. CPX 에이전트 작업은 다음을 기준으로 한다.
+Read `AGENTS.md` first. For CPX agent work, use:
 
 - `cpx_agent/README.md`
 - `cpx_agent/AGENTS.md`
 - `cpx_agent/docs/cpx_protocol.md`
 - `.codex/state/cpx_agent_state.yaml`
 
-로컬 상태 요약:
+Local state summary:
 
 ```powershell
 python tools/project_state_mcp.py --print-session-start cpx_agent
-python tools/project_state_mcp.py --print-validation-for cpx_agent/prompts/patient_role.md
+python tools/project_state_mcp.py --print-validation-for cpx_agent/src/bad_news_backend.py
 ```
 
-검증:
+Validation:
 
 ```powershell
 python tools/healthcheck.py
-python tools/healthcheck.py --paths cpx_agent/prompts/patient_role.md
 python -m unittest discover -s cpx_agent/tests -p "test_*.py"
 ```
 
-프롬프트 하네스:
+Run the local service:
 
 ```powershell
-python tools/prompt_harness.py --patient-card cpx_agent/data/patient_cards/chest_pain_example.json --print-patient-prompt
-python tools/prompt_harness.py --patient-card cpx_agent/data/patient_cards/chest_pain_example.json --validate-only
+python -m cpx_agent.src.cpx_server --port 8787
 ```
 
-동적 운영 상태는 `.codex/state/`에 둔다. 앱이나 모델 구현이 커지기 전까지는
-`project-state` 로컬 MCP와 표준 라이브러리 기반 하네스를 우선한다.
+Browser: `http://127.0.0.1:8787`
+
+Android emulator: `http://10.0.2.2:8787`

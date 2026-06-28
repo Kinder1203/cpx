@@ -2,61 +2,62 @@
 
 ## Core Objects
 
-- Patient Card: 합성 케이스의 단일 사실 원천
-- Encounter Session: 한 번의 학습자-환자 문진 상태
-- Transcript: 순서가 보존된 학습자 질문과 환자 답변
-- Concept Match: 자유 질문과 카드 문진 개념의 정규화 결과
-- Evaluation Report: 확인·누락·안전 이벤트와 설명
-- Learner Assessment: 문제 요약, 우선 진단, 감별 진단, 판단 근거
-- Weakness Profile: 반복 약점과 다음 케이스 선택 근거
+- Bad-News Case: one imported 2026-CODE-MEDI case JSON with visible chart data,
+  hidden patient persona, emotion profile, and education metadata.
+- Checklist Reference: imported bad-news delivery checklist, critical fails,
+  emotion-response items, and PPI items.
+- Encounter Session: one learner practice run for a selected bad-news case.
+- Transcript: ordered doctor utterances and standardized-patient replies.
+- Evaluation Report: checklist/PPI scoring, critical-fail notes, weakness
+  analysis, recommendation, and next-practice direction.
+- Weakness Profile: compact learner-level history used for recommendations.
 
 ## P0 Functional Loop
 
-1. 환자 카드 스키마와 누설 민감 필드를 검증한다.
-2. 학습자의 자유 문장 질문을 받는다.
-3. 질문을 카드에 정의된 문진 개념으로 정규화한다.
-4. 일치한 카드 응답만 반환하고 반복 응답의 일관성을 유지한다.
-5. 학습자·환자 메시지와 경계 이벤트를 기록한다.
-6. 한 번 이상 질문한 학습자가 임상 판단 4개 필드를 작성해 제출한다.
-7. 문진의 확인·누락 항목과 임상 판단을 카드 정의 규칙으로 각각 평가한다.
-8. 해결된 약점은 감쇠하고 최근 케이스 이력을 갱신한다.
-9. 수행이 부족하면 약점 관련 보완 케이스를, 충분하면 다른 계통의 확장 케이스를 선택한다.
+1. The server loads ready cases from `cpx_agent/data/bad_news/cases/`.
+2. The app starts a session for a selected or recommended case.
+3. The learner enters a free-text doctor utterance.
+4. The server sends the current case, emotion state, transcript, and utterance to
+   the imported patient-role LLM prompt contract.
+5. The server records the patient reply and returns it to the app.
+6. When the learner ends the encounter, the server evaluates the transcript with
+   the imported checklist/PPI evaluator prompt contract.
+7. The app displays the formative report and next-practice recommendation using
+   the existing report UI contract.
+8. The server stores generated reports under `cpx_agent/data/reports/bad_news/`.
 
-질환별 어휘, 응답, 중요도, 약점 태그는 환자 카드에 둔다. 코어 엔진은 특정 질환
-규칙을 포함하지 않는다. Codex CLI는 선택적 개념 분류기이며 환자 답변이나 평가를
-작성하지 않는다. 속도를 위해 낮은 추론 수준을 쓰며 실패 시 결정적 로컬 매칭과 카드
-fallback으로 복구한다.
+The confirmed topic is bad-news delivery. This demo keeps WebView/Android as a
+runner around the local service and does not introduce Codex CLI runtime model
+calls.
 
 ## MVP Screens
 
 1. Case Setup
-   - 안전한 케이스 메타데이터만 표시한다.
-   - 시작 전에 카드 준비 상태를 검증한다.
+   - Shows safe public case metadata only.
+   - Starts a ready bad-news case session.
 2. Pixel Encounter
-   - 환자 장면, 최근 양방향 대화, 자유 질문 입력, 종료 동작을 제공한다.
-   - 전체 기록과 관리자 정보는 필요할 때만 별도 패널로 연다.
-3. Learner Assessment
-   - 문제 요약, 우선 진단, 감별 진단, 판단 근거를 작성한다.
-   - 제출 전에는 리포트를 생성하지 않으며 문진으로 돌아갈 수 있다.
-4. Evaluation
-   - 확인·누락 문진, 임상 판단 피드백, 다음 연습 목표와 실행 모드에서 허용된 추천 케이스를 제공한다.
-   - 피드백 상세에는 중요성, 관련 학습자 기록, 선택적 검증 근거를 제공한다.
-   - 확인할 피드백 목록은 상세 패널과 독립적으로 스크롤한다.
-   - 일반 문진 화면은 남는 세로 공간을 환자 장면이 흡수하되 기존 최소 높이를 유지한다.
-5. Demo Admin
-   - 세션 초기화와 환자 카드 교체를 지원한다.
+   - Shows learner and patient speech bubbles.
+   - Provides one free-text doctor utterance input and transcript access.
+3. Evaluation
+   - Shows completed, partial, missed, and critical-fail feedback from the
+     server report.
+   - Shows weakness analysis and next-practice recommendation.
+4. Demo Admin
+   - Supports lightweight restart/session reset for hackathon demonstration.
 
 ## Guarded Behaviors
 
-- `hidden_diagnosis`, 평가 키, 내부 프롬프트를 UI나 공개 payload에 포함하지 않는다.
-- 환자 역할은 진단·치료 권위를 갖지 않는다.
-- 카드에 없는 병력·검사·복약·가족력을 생성하지 않는다.
-- LLM 실패 시 결정적 카드 매칭과 fallback 응답으로 복구한다.
-- 임상 판단의 개념 근거는 해당 세션에서 공개된 문진 정보만 인정한다.
-- 생성 리포트와 세션에는 실제 환자 데이터나 비밀값을 저장하지 않는다.
-- 흔한 케이스를 우선하고, 드문 케이스는 임상 중요도가 high/critical일 때만 등록한다.
+- Do not expose hidden persona data, evaluator keys, internal prompts, or private
+  checklist answers to the learner UI.
+- The patient-role LLM must not become the doctor, make treatment decisions, or
+  fabricate facts outside the case JSON.
+- Generated reports are formative education output, not formal medical
+  assessment.
+- Do not store real patient data, private student data, API keys, or secrets.
+- The original `C:\Users\user\Desktop\2026-CODE-MEDI\backend` folder remains
+  read-only from this repo; imported copies live under `cpx_agent/data/bad_news/`.
 
 ## Deferred Objects
 
-Mission Map, 질문 카드, 환자 상태 게이지와 신체진찰은 P0 객체가 아니다. 외부 근거
-수집·자동 검증을 추가할 때는 독립 스키마와 출처 검증을 먼저 정의한다.
+Mission Map, question cards, patient state gauges, physical examination, and
+automatic case generation are outside the P0 scope.

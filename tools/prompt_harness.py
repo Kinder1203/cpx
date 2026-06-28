@@ -11,70 +11,100 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from cpx_agent.src.cpx_core import patient_card_errors
+from cpx_agent.src.bad_news_backend import (
+    BadNewsCaseRepository,
+    build_checklist_evaluator_prompt,
+    build_patient_system_prompt,
+    build_ppi_evaluator_prompt,
+)
 
 
-PATIENT_PROMPT = ROOT / "cpx_agent" / "prompts" / "patient_role.md"
-EVALUATOR_PROMPT = ROOT / "cpx_agent" / "prompts" / "evaluator.md"
+DEFAULT_DATA_DIR = ROOT / "cpx_agent" / "data" / "bad_news"
+DEFAULT_CASE_ID = "B05-breast-cancer"
+DEFAULT_DIFFICULTY = "중간"
+DEFAULT_INITIAL_EMOTION = "분노"
 
 
-def load_patient_card(path: Path) -> dict[str, Any]:
-    data = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(data, dict):
-        raise ValueError("patient card must be a JSON object")
-    return data
+def _resolve_data_dir(value: str) -> Path:
+    path = Path(value)
+    return path if path.is_absolute() else ROOT / path
 
 
-def validate_patient_card(card: dict[str, Any]) -> list[str]:
-    return patient_card_errors(card)
-
-
-def render_prompt(template_path: Path, card: dict[str, Any], transcript: str | None = None) -> str:
-    template = template_path.read_text(encoding="utf-8")
-    patient_card_json = json.dumps(card, ensure_ascii=False, indent=2, sort_keys=True)
-    rendered = template.replace("{{PATIENT_CARD_JSON}}", patient_card_json)
-    if transcript is not None:
-        rendered = rendered.replace("{{TRANSCRIPT}}", transcript)
-    return rendered
+def _case_errors(case: dict[str, Any], checklist: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    for key in (
+        "case_id",
+        "case_title",
+        "display_name",
+        "chart_visible_to_learner",
+        "instruction_to_learner",
+        "patient_persona",
+        "checklist_scope",
+    ):
+        if key not in case:
+            errors.append(f"missing case key: {key}")
+    scope = case.get("checklist_scope", {})
+    if not isinstance(scope, dict):
+        return [*errors, "checklist_scope must be an object"]
+    core = checklist.get("core_checklist", {})
+    critical = checklist.get("critical_fail", {})
+    for code in scope.get("core_required", []):
+        if code not in core:
+            errors.append(f"unknown core checklist item: {code}")
+    for code in scope.get("critical_fail_watchlist", []):
+        if code not in critical:
+            errors.append(f"unknown critical fail item: {code}")
+    return errors
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Validate and render CPX patient-card prompts.")
-    parser.add_argument("--patient-card", required=True)
+    parser = argparse.ArgumentParser(description="Validate and render imported bad-news CPX prompts.")
+    parser.add_argument("--data-dir", default=str(DEFAULT_DATA_DIR.relative_to(ROOT)))
+    parser.add_argument("--bad-news-case", "--case-id", dest="case_id", default=DEFAULT_CASE_ID)
+    parser.add_argument("--difficulty", default=DEFAULT_DIFFICULTY)
+    parser.add_argument("--initial-emotion", default=DEFAULT_INITIAL_EMOTION)
     parser.add_argument("--transcript")
     parser.add_argument("--validate-only", action="store_true")
     parser.add_argument("--print-patient-prompt", action="store_true")
-    parser.add_argument("--print-evaluator-prompt", action="store_true")
+    parser.add_argument("--print-checklist-prompt", action="store_true")
+    parser.add_argument("--print-ppi-prompt", action="store_true")
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
-    card_path = Path(args.patient_card)
-    if not card_path.is_absolute():
-        card_path = ROOT / card_path
-    card = load_patient_card(card_path)
-    errors = validate_patient_card(card)
+    data_dir = _resolve_data_dir(args.data_dir)
+    repository = BadNewsCaseRepository(data_dir)
+    case = repository.get(args.case_id)
+    checklist = repository.checklist
+    errors = _case_errors(case, checklist)
     if errors:
         for error in errors:
             print(f"FAIL {error}")
         return 1
 
     if args.validate_only:
-        print(f"OK patient card valid: {card_path.relative_to(ROOT).as_posix()}")
+        print(f"OK bad-news case valid: {args.case_id}")
         return 0
 
     if args.print_patient_prompt:
-        print(render_prompt(PATIENT_PROMPT, card))
+        print(build_patient_system_prompt(case, args.difficulty, args.initial_emotion))
         return 0
 
-    if args.print_evaluator_prompt:
-        transcript = args.transcript or ""
-        print(render_prompt(EVALUATOR_PROMPT, card, transcript=transcript))
+    if args.print_checklist_prompt:
+        print(build_checklist_evaluator_prompt(case, checklist, args.initial_emotion))
+        if args.transcript:
+            print("\n[Transcript]\n" + args.transcript)
         return 0
 
-    print(f"OK patient card valid: {card_path.relative_to(ROOT).as_posix()}")
-    print("Use --print-patient-prompt or --print-evaluator-prompt to render a template.")
+    if args.print_ppi_prompt:
+        print(build_ppi_evaluator_prompt(case, checklist, args.initial_emotion))
+        if args.transcript:
+            print("\n[Transcript]\n" + args.transcript)
+        return 0
+
+    print(f"OK bad-news case valid: {args.case_id}")
+    print("Use --print-patient-prompt, --print-checklist-prompt, or --print-ppi-prompt to render prompts.")
     return 0
 
 

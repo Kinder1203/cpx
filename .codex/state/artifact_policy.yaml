@@ -4,7 +4,7 @@ owner: user
 policy:
   active_runtime:
     cpx_agent:
-      - cpx_agent/data/patient_cards
+      - cpx_agent/data/bad_news
   generated:
     cpx_agent:
       - cpx_agent/data/sessions
@@ -15,9 +15,9 @@ policy:
 
 rules:
   - Do not treat generated session logs as source of truth.
-  - Patient cards are editable scenario inputs, not real patient records.
+  - Imported bad-news cases are editable demo scenario inputs, not real patient records.
   - Do not store real patient data, student personal data, API keys, or secrets.
-  - Keep example patient cards synthetic.
+  - Keep demo cases synthetic or curated for education only.
   - Generated reports are demo artifacts and may be regenerated.
   - Do not delete generated artifacts without a concrete user instruction and reason.
-  - If a report is used for judging a prompt or app change, keep the source patient card and prompt version together.
+  - If a report is used for judging a prompt or app change, keep the source bad-news case and prompt version together.

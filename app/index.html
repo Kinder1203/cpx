@@ -11,7 +11,7 @@
     <main class="app-shell" aria-label="CODE MEDI CPX serious simulation app">
       <section class="cpx-device" aria-label="CPX practice console">
         <header class="console-bar">
-          <button class="square-button info" id="infoBtn" type="button" aria-label="Fixture information" aria-controls="caseReadiness" aria-expanded="false">i</button>
+          <span class="square-button-spacer" aria-hidden="true"></span>
           <div>
             <p class="eyebrow">Demo case | Patient role only</p>
             <h1>CODE MEDI CPX ROOM</h1>
@@ -20,7 +20,7 @@
         </header>
 
         <section class="scene-stage" aria-label="Single CPX encounter scene">
-          <img class="room-art" src="./assets/pixel/clinic_room.png" alt="" aria-hidden="true" />
+          <img class="room-art" src="./assets/pixel/background.png" alt="" aria-hidden="true" />
 
           <div class="patient-zone">
             <div class="sprite patient-sprite" id="patientSprite" aria-label="Pixel standardized patient"></div>
@@ -33,13 +33,13 @@
           </div>
 
           <div class="speech-panel patient-speech" id="patientBubble" aria-live="polite">
-            문진 시작을 누르면 표준화 환자 문진이 시작됩니다.
+            대화 시작을 누른 뒤 질문을 입력하면 환자가 답변합니다.
           </div>
 
           <div class="speech-panel learner-speech" id="learnerBubble" aria-live="polite" hidden></div>
 
           <button class="record-toggle" id="recordToggle" type="button" aria-controls="recordModal" aria-expanded="false">
-            <span>문진 기록</span>
+            <span>진단 스프레드시트</span>
             <strong id="recordCount">기록 없음</strong>
             <small id="recordPreview">아직 기록 없음</small>
           </button>
@@ -56,20 +56,6 @@
         </section>
 
         <section class="dialogue-box" aria-label="Learner controls">
-          <section class="case-readiness" id="caseReadiness" aria-label="Case setup readiness" tabindex="-1" hidden>
-            <div>
-              <strong id="caseTitle">케이스 준비 중</strong>
-              <small id="caseMeta">합성 교육용 데모 카드와 문진 서버를 확인하는 중</small>
-              <label class="case-selector" for="caseSelect">
-                <span>연습 환자 선택</span>
-                <select id="caseSelect" disabled aria-label="연습 환자 선택"></select>
-              </label>
-            </div>
-            <ul id="readinessList">
-              <li class="pending">문진 서버 연결 중</li>
-            </ul>
-          </section>
-
           <form class="free-ask" id="composer">
             <label for="freeQuestion">환자에게 질문하기</label>
             <div>
@@ -79,56 +65,22 @@
           </form>
 
           <div class="command-row">
-            <button class="primary-command" id="startBtn" type="button">문진 시작</button>
-            <button class="secondary-command" id="finishBtn" type="button" disabled>문진 정리</button>
+            <button class="primary-command" id="startBtn" type="button">대화 시작</button>
+            <button class="secondary-command" id="finishBtn" type="button" disabled>대화 종료</button>
           </div>
         </section>
 
-        <section class="record-modal" id="recordModal" aria-label="전체 문진 기록" hidden>
+        <section class="record-modal" id="recordModal" aria-label="진단 스프레드시트" hidden>
           <header>
             <div>
               <p class="eyebrow">Question / Answer log</p>
-              <h2>문진 기록</h2>
+              <h2>진단 스프레드시트</h2>
             </div>
             <button class="square-button reset" id="closeRecordBtn" type="button" aria-label="Close record">X</button>
           </header>
           <div class="record-feed" id="recordFeed">
             <p class="empty-state">질문과 환자 응답이 여기에 기록됩니다.</p>
           </div>
-        </section>
-
-        <section class="assessment-sheet" id="assessmentPanel" aria-label="학습자 임상 판단 작성" hidden>
-          <header>
-            <div>
-              <p class="eyebrow">Learner assessment</p>
-              <h2>임상 판단 작성</h2>
-            </div>
-            <button class="square-button reset" id="closeAssessmentBtn" type="button" aria-label="Close assessment">X</button>
-          </header>
-          <form class="assessment-form" id="assessmentForm">
-            <div class="assessment-fields">
-              <label for="assessmentSummary">
-                <span>문제 요약</span>
-                <textarea id="assessmentSummary" maxlength="2000" required></textarea>
-              </label>
-              <label for="assessmentPrimary">
-                <span>우선 진단</span>
-                <input id="assessmentPrimary" type="text" maxlength="2000" required />
-              </label>
-              <label for="assessmentDifferentials">
-                <span>감별 진단</span>
-                <textarea id="assessmentDifferentials" maxlength="2000" required></textarea>
-              </label>
-              <label for="assessmentReasoning">
-                <span>판단 근거</span>
-                <textarea id="assessmentReasoning" maxlength="2000" required></textarea>
-              </label>
-            </div>
-            <div class="assessment-actions">
-              <button class="secondary-command" id="resumeEncounterBtn" type="button">문진으로 돌아가기</button>
-              <button class="primary-command" id="submitAssessmentBtn" type="submit">제출하고 리포트 보기</button>
-            </div>
-          </form>
         </section>
 
         <section class="report-sheet" id="reportPanel" aria-label="CPX educational report" tabindex="-1" hidden>
@@ -143,6 +95,9 @@
             <div>
               <span>Coverage</span>
               <strong id="reportCoverage">0%</strong>
+              <div class="coverage-meter" aria-hidden="true">
+                <span id="reportCoverageBar"></span>
+              </div>
             </div>
             <div>
               <span>Missed</span>

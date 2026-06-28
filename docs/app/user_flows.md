@@ -2,44 +2,31 @@
 
 ## Flow 1: Prepare Case
 
-1. 운영자가 합성 환자 카드를 선택한다.
-2. 서버가 required sections와 누설 민감 필드를 검증한다.
-3. 학습자에게 safe metadata만 표시한다.
-4. 실패 시 누락 섹션만 알리고 내부 정답은 표시하지 않는다.
+1. The server loads playable cases from `cpx_agent/data/bad_news/cases/`.
+2. The app receives only public case metadata and learner-facing chart content.
+3. Hidden diagnosis, checklist keys, internal prompts, and evaluator rubrics stay server-side.
 
 ## Flow 2: Run Encounter
 
-1. 학습자가 문진을 시작한다.
-2. 자유 문장으로 환자에게 질문한다.
-3. 서버가 질문을 환자 카드 문진 개념으로 정규화한다.
-4. 환자는 일치한 카드 정보만 답한다.
-5. 학습자 질문과 환자 답변을 각각 기록한다.
-6. 최근 대화는 장면에, 전체 대화는 별도 기록 패널에 표시한다.
-7. 학습자가 문진 정리를 선택한다.
+1. The learner starts a selected bad-news case.
+2. The learner enters a free-text doctor utterance.
+3. The server sends the transcript and imported case persona to the patient-role LLM.
+4. The patient reply is appended to the session transcript.
+5. The learner continues or ends the encounter.
 
-## Flow 3: Submit Learner Assessment
+## Flow 3: Evaluate
 
-1. 학습자가 문제 요약, 우선 진단, 감별 진단, 판단 근거를 작성한다.
-2. 필요하면 문진으로 돌아가 추가 질문한다.
-3. 네 필드가 모두 작성되면 평가를 요청한다.
-4. 비공개 카드 rubric은 서버에서만 적용하고 브라우저에 공개하지 않는다.
+1. The server evaluates the final transcript with checklist and PPI evaluator prompts.
+2. The report returns completed/missed checklist items, feedback, weakness summary, and next-practice direction.
+3. The app renders only educational feedback, not hidden case internals.
 
-## Flow 4: Evaluate
+## Flow 4: Next Practice
 
-1. 규칙 기반 평가기가 transcript의 concept events를 집계한다.
-2. 카드 rubric으로 학습자 임상 판단을 별도로 평가한다.
-3. 확인·누락·중대 항목과 판단 보완점을 계산한다.
-4. 각 피드백에 중요성과 관련 학습자 기록을 연결한다.
-5. 관련성이 검증된 근거가 카드에 있을 때만 해당 링크를 표시한다.
-6. 해결된 약점을 감쇠하고 최근 케이스 이력을 갱신한다.
-7. 수행 기준을 충족하지 못하면 약점 관련 보완 케이스를, 충족하면 다른 계통의 확장
-   케이스를 고른다. 두 모드 모두 흔하거나 임상적으로 중요한 실행 허용 카드를 우선한다.
-8. 리포트는 hidden diagnosis나 내부 평가 키를 노출하지 않는다.
-9. 학습자는 같은 화면 계약으로 추천 케이스를 바로 시작할 수 있다.
+1. The server recommends remediation or progression based on missed checkpoint categories.
+2. The learner can start the recommended next case from the same API flow.
 
-## Flow 5: Day-of Case Swap
+## Flow 5: Backend Case Update
 
-1. 새 주제의 환자 카드와 체크리스트를 작성한다.
-2. `tools/prompt_harness.py --validate-only`로 검증한다.
-3. 앱 흐름을 바꾸지 않고 카드만 교체한다.
-4. encounter와 evaluation을 최소 한 번 dry run 한다.
+1. Add or update imported bad-news case JSON under `cpx_agent/data/bad_news/cases/`.
+2. Validate with `python tools/prompt_harness.py --bad-news-case B05-breast-cancer --validate-only`.
+3. Run `python tools/healthcheck.py` and the unit test suite.

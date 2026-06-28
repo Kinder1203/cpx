@@ -1,28 +1,23 @@
-"""Reusable CPX patient-role runtime."""
+"""Reusable CPX bad-news delivery runtime."""
 
-from .cpx_core import (
-    AskResult,
-    EncounterEngine,
-    EvaluationReport,
-    NextCaseBlueprint,
-    WeaknessProfile,
-    match_question_concepts,
-    patient_card_errors,
-    select_next_case_blueprint,
-    validate_patient_card,
+from .bad_news_backend import (
+    BadNewsCaseRepository,
+    BadNewsSessionService,
+    OpenAIChatCompletionsClient,
+    build_checklist_evaluator_prompt,
+    build_patient_system_prompt,
+    build_ppi_evaluator_prompt,
+    format_transcript,
+    load_project_env,
 )
-from .cpx_service import CardRepository, CpxSessionService
 
 __all__ = [
-    "AskResult",
-    "EncounterEngine",
-    "EvaluationReport",
-    "NextCaseBlueprint",
-    "WeaknessProfile",
-    "match_question_concepts",
-    "patient_card_errors",
-    "select_next_case_blueprint",
-    "validate_patient_card",
-    "CardRepository",
-    "CpxSessionService",
+    "BadNewsCaseRepository",
+    "BadNewsSessionService",
+    "OpenAIChatCompletionsClient",
+    "build_checklist_evaluator_prompt",
+    "build_patient_system_prompt",
+    "build_ppi_evaluator_prompt",
+    "format_transcript",
+    "load_project_env",
 ]

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import unittest
+import struct
 from pathlib import Path
 
 
@@ -12,6 +13,11 @@ class AppVerticalSliceTests(unittest.TestCase):
     def read_app_file(self, relative: str) -> str:
         return (APP_DIR / relative).read_text(encoding="utf-8")
 
+    def png_size(self, relative: str) -> tuple[int, int]:
+        data = (APP_DIR / relative).read_bytes()
+        self.assertEqual(data[:8], b"\x89PNG\r\n\x1a\n")
+        return struct.unpack(">II", data[16:24])
+
     def test_app_files_and_visual_assets_exist(self) -> None:
         expected = [
             "index.html",
@@ -20,8 +26,13 @@ class AppVerticalSliceTests(unittest.TestCase):
             "README.md",
             "assets/pixel/clinic_room.png",
             "assets/pixel/learner_idle.png",
+            "assets/pixel/learner_think.png",
             "assets/pixel/learner_typing.png",
             "assets/pixel/patient_idle.png",
+            "assets/pixel/emotion/patient_anger.png",
+            "assets/pixel/emotion/patient_bargaining.png",
+            "assets/pixel/emotion/patient_denial.png",
+            "assets/pixel/emotion/patient_depression.png",
         ]
         for relative in expected:
             with self.subTest(relative=relative):
@@ -31,27 +42,39 @@ class AppVerticalSliceTests(unittest.TestCase):
         html = self.read_app_file("index.html")
         for element_id in [
             "patientBubble",
+            "patientSprite",
             "learnerBubble",
             "composer",
             "freeQuestion",
+            "reportPanel",
+            "nextCaseBtn",
+            "recordModal",
+        ]:
+            with self.subTest(element_id=element_id):
+                self.assertIn(f'id="{element_id}"', html)
+        for removed_id in [
+            "infoBtn",
+            "caseReadiness",
             "assessmentPanel",
             "assessmentForm",
             "assessmentSummary",
             "assessmentPrimary",
             "assessmentDifferentials",
             "assessmentReasoning",
-            "reportPanel",
-            "nextCaseBtn",
-            "recordModal",
             "caseSelect",
+            "emotionSelect",
+            "caseInfo",
         ]:
-            with self.subTest(element_id=element_id):
-                self.assertIn(f'id="{element_id}"', html)
+            with self.subTest(removed_id=removed_id):
+                self.assertNotIn(f'id="{removed_id}"', html)
         self.assertIn("CODE MEDI CPX ROOM", html)
         self.assertIn("Patient role only", html)
         self.assertIn("Demo case", html)
+        self.assertIn("대화 시작", html)
+        self.assertIn("대화 종료", html)
         self.assertNotIn("Validated case", html)
-        self.assertIn("문진 기록", html)
+        self.assertIn("진단 스프레드시트", html)
+        self.assertNotIn("문진 시작", html)
         self.assertNotIn('id="choicePanel"', html)
         self.assertNotIn('id="decisionBoard"', html)
         self.assertNotIn('class="status-row"', html)
@@ -84,6 +107,26 @@ class AppVerticalSliceTests(unittest.TestCase):
             self.assertIn(route, script)
         self.assertIn("payload.result.kind", script)
         self.assertIn("payload.next_case", script)
+        self.assertIn('const EMOTION_OPTIONS = ["부정", "분노", "협상", "우울"]', script)
+        self.assertIn("const EMOTION_SPRITE_CLASS", script)
+        self.assertIn('"부정": "emotion-denial"', script)
+        self.assertIn('"분노": "emotion-anger"', script)
+        self.assertIn('"협상": "emotion-bargaining"', script)
+        self.assertIn('"우울": "emotion-depression"', script)
+        self.assertIn("function randomItem(items)", script)
+        self.assertIn("function setPatientEmotionSprite(emotion)", script)
+        self.assertIn("case_id: caseItem.case_id", script)
+        self.assertIn("initial_emotion: initialEmotion", script)
+        self.assertIn("setPatientEmotionSprite(state.initialEmotion)", script)
+        self.assertIn("setPatientEmotionSprite(null)", script)
+        self.assertIn("function visibleMessages()", script)
+        self.assertIn("const transcript = visibleMessages();", script)
+        self.assertIn('latestPatient?.content || "대화 시작을 누른 뒤 질문을 입력하면 환자가 답변합니다."', script)
+        self.assertIn('elements.finishBtn.addEventListener("click", finishEncounter)', script)
+        self.assertNotIn('elements.caseSelect.addEventListener("change"', script)
+        self.assertNotIn('elements.emotionSelect.addEventListener("change"', script)
+        self.assertNotIn("renderCaseControls", script)
+        self.assertNotIn("selectCase", script)
         self.assertNotIn("matchQuestionConcepts", script)
         self.assertNotIn("fetchPatientResponse", script)
         self.assertNotIn("FIXTURE_URL", script)
@@ -97,7 +140,9 @@ class AppVerticalSliceTests(unittest.TestCase):
         self.assertIn("다음 연습 목표", html)
         self.assertIn("state.nextCase?.directions", script)
         self.assertIn("state.nextCase?.case", script)
-        self.assertIn("startRecommendedCase", script)
+        self.assertIn("startRandomFollowupCase", script)
+        self.assertIn('setText(elements.nextCaseBtn, "랜덤 케이스 시작")', script)
+        self.assertNotIn("startRecommendedCase", script)
         self.assertIn("item.why_it_matters", script)
         self.assertIn("item.learner_evidence", script)
         self.assertIn("item.evidence", script)
@@ -124,6 +169,16 @@ class AppVerticalSliceTests(unittest.TestCase):
         self.assertIn("@media (max-width: 620px)", css)
         self.assertIn("env(safe-area-inset-top)", css)
         self.assertIn("image-rendering: pixelated", css)
+        self.assertIn("transform: scale(1.45)", css)
+        self.assertIn(".patient-zone::before", css)
+        self.assertIn(".learner-zone::before", css)
+        self.assertIn('background-image: var(--patient-sprite-sheet, url("./assets/pixel/patient_idle.png"))', css)
+        self.assertIn("animation: sprite-patient 2400ms step-end infinite", css)
+        self.assertIn('url("./assets/pixel/emotion/patient_denial.png")', css)
+        self.assertIn('url("./assets/pixel/emotion/patient_anger.png")', css)
+        self.assertIn('url("./assets/pixel/emotion/patient_bargaining.png")', css)
+        self.assertIn('url("./assets/pixel/emotion/patient_depression.png")', css)
+        self.assertIn('background-image: url("./assets/pixel/learner_think.png")', css)
         self.assertIn("step-end", css)
         for animation_name in (
             "sprite-patient",
@@ -136,10 +191,22 @@ class AppVerticalSliceTests(unittest.TestCase):
             self.assertIn(f"@keyframes {animation_name}", css)
         self.assertNotIn("vw", css)
 
+    def test_emotion_spritesheets_match_patient_idle_canvas(self) -> None:
+        baseline = self.png_size("assets/pixel/patient_idle.png")
+        self.assertEqual(baseline, (2508, 627))
+        for relative in [
+            "assets/pixel/emotion/patient_anger.png",
+            "assets/pixel/emotion/patient_bargaining.png",
+            "assets/pixel/emotion/patient_denial.png",
+            "assets/pixel/emotion/patient_depression.png",
+        ]:
+            with self.subTest(relative=relative):
+                self.assertEqual(self.png_size(relative), baseline)
+
     def test_overlays_are_positioned_inside_the_device(self) -> None:
         css = self.read_app_file("styles.css")
         record_rule = css.split(".record-modal {", 1)[1].split("}", 1)[0]
-        overlay_rule = css.split(".assessment-sheet,", 1)[1].split("}", 1)[0]
+        overlay_rule = css.split(".report-sheet {", 1)[1].split("}", 1)[0]
         self.assertIn("position: absolute", record_rule)
         self.assertIn("position: absolute", overlay_rule)
         self.assertIn("overflow: hidden", overlay_rule)
@@ -152,17 +219,12 @@ class AppVerticalSliceTests(unittest.TestCase):
             script,
         )
         self.assertIn(
-            'elements.assessmentPanel.parentElement.scrollTo({ top: 0, behavior: "auto" })',
-            script,
-        )
-        self.assertIn(
             'elements.reportPanel.parentElement.scrollTo({ top: 0, behavior: "auto" })',
             script,
         )
 
-    def test_report_and_assessment_use_internal_scrolling(self) -> None:
+    def test_report_uses_internal_scrolling(self) -> None:
         css = self.read_app_file("styles.css")
-        self.assertIn(".assessment-fields", css)
         self.assertIn(".report-list-panel", css)
         self.assertIn(".report-detail", css)
         self.assertIn("overflow-y: auto", css)
@@ -174,15 +236,14 @@ class AppVerticalSliceTests(unittest.TestCase):
         self.assertIn("overflow: hidden", list_panel_rule)
         self.assertIn("overflow-y: auto", missed_list_rule)
 
-    def test_fixture_information_control_is_wired(self) -> None:
+    def test_fixture_information_control_is_removed(self) -> None:
         html = self.read_app_file("index.html")
         script = self.read_app_file("app.js")
-        self.assertIn('id="infoBtn"', html)
-        self.assertIn('id="caseReadiness"', html)
-        self.assertIn("showFixtureInformation", script)
-        self.assertIn('elements.caseSelect.addEventListener("change"', script)
-        self.assertIn('elements.infoBtn.setAttribute("aria-expanded"', script)
-        self.assertIn('elements.infoBtn.addEventListener("click"', script)
+        self.assertNotIn('id="infoBtn"', html)
+        self.assertNotIn('id="caseReadiness"', html)
+        self.assertNotIn("showFixtureInformation", script)
+        self.assertNotIn('elements.infoBtn.setAttribute("aria-expanded"', script)
+        self.assertNotIn('elements.infoBtn.addEventListener("click"', script)
         self.assertNotIn("턴", script)
 
 

@@ -1,5 +1,5 @@
 schema_version: 1
-last_reviewed: 2026-06-28
+last_reviewed: 2026-06-29
 owner: user
 track: cpx_agent
 status: functional_vertical_slice
@@ -11,7 +11,7 @@ source_of_truth:
   track_agents: cpx_agent/AGENTS.md
   protocol: cpx_agent/docs/cpx_protocol.md
   prompt_dir: cpx_agent/prompts
-  patient_card_dir: cpx_agent/data/patient_cards
+  bad_news_case_db: cpx_agent/data/bad_news
   app_setup_dir: docs/app
   app_prd: docs/app/prd.md
   app_functional_spec: docs/app/functional_spec.md
@@ -29,20 +29,20 @@ source_of_truth:
 
 current_stance:
   event: 2026 CODE MEDI medical AI/SW hackathon
-  expected_product: LLM 기반 CPX 표준화 환자 에이전트
-  stage: harness_backed_functional_vertical_slice
+  confirmed_topic: bad_news_delivery
+  expected_product: 나쁜 소식 전하기 CPX 대화 종료 후 체크포인트 리포트 데모
+  stage: imported_bad_news_backend_integration
   app_direction: 2d_pixel_cpx_serious_simulation
   design_priority: preserve_existing_visual_direction_after_functional_contract
-  backend_stance: standard_library_sqlite_session_service_with_card_driven_core
-  learner_input_mode: single_free_text_question
-  evaluation_mode: deterministic_card_defined_rules_with_disclosed_evidence_only
-  adaptive_mode: deterministic_dual_mode_release_eligible_card_library_selection
-  patient_card_count: 2
-  demo_only_card_count: 2
-  clinically_validated_card_count: 0
-  patient_card_schema_version: 1.2.0
-  session_persistence: local_sqlite_snapshot_and_event_log
-  evaluation_scope: versioned_card_based_formative_not_formally_validated
+  backend_stance: imported_2026_code_medi_bad_news_case_db_with_stdlib_http_adapter
+  learner_input_mode: doctor_utterance_chat
+  patient_utterance_owner: integrated_openai_patient_role_from_imported_backend
+  evaluation_mode: imported_llm_checklist_and_ppi_checkpoint_scoring
+  adaptive_mode: imported_weakness_category_recommendation
+  bad_news_ready_case_count: 10
+  legacy_patient_card_runtime: removed_from_active_repo
+  session_persistence: in_memory_bad_news_session_with_json_report_files
+  evaluation_scope: imported_bad_news_delivery_checklist_ppi_hackathon_demo
   learner_assessment_fields:
     - problem_summary
     - primary_impression
@@ -56,37 +56,28 @@ current_stance:
     - pre_reasoning_decision_board
   app_setup_profile: lightweight_docs_first_optional_mcp
   app_framework_decided: true
-  llm_provider_decided: true
-  llm_provider: codex_cli_optional_concept_matcher
-  codex_reasoning_effort: low
-  codex_timeout_seconds: 8
-  codex_resilience: deterministic_fallback_cache_and_circuit_breaker
-  api_key_required_now: false
+  codex_cli_model_calls_required: false
+  api_key_required_now: true
   real_patient_data_allowed: false
   diagnosis_or_treatment_product_goal: false
   hidden_diagnosis_may_be_shown_to_user: false
   internal_prompt_may_be_shown_to_user: false
 
 cpx_contract:
-  patient_card_driven: true
+  case_db_driven: true
   patient_role_only: true
   reveal_only_when_asked: true
   preserve_conversation_consistency: true
   evaluate_after_encounter: true
   supports_day_of_case_swap: true
-  required_patient_card_sections:
-    - schema_version
-    - publication
-    - evidence
-    - evaluation_metadata
-    - curriculum_metadata
-    - patient_profile
-    - disclosure_policy
-    - conversation_style
-    - cpx_checklist
-    - clinical_assessment_rubric
-    - adaptive_curriculum
-    - safety_notes
+  required_bad_news_case_sections:
+    - case_id
+    - case_title
+    - display_name
+    - chart_visible_to_learner
+    - instruction_to_learner
+    - patient_persona
+    - checklist_scope
 
 prompt_contract:
   patient_role_prompt: cpx_agent/prompts/patient_role.md
@@ -102,7 +93,7 @@ prompt_contract:
 
 harness:
   prompt_harness: tools/prompt_harness.py
-  sample_patient_card: cpx_agent/data/patient_cards/chest_pain_example.json
+  sample_bad_news_case: B05-breast-cancer
   validation:
     - python tools/healthcheck.py
     - python -m unittest discover -s cpx_agent/tests -p "test_*.py"
@@ -122,12 +113,13 @@ project_structure:
   generated_artifacts:
     - cpx_agent/data/sessions
     - cpx_agent/data/reports
+  imported_case_data:
+    - cpx_agent/data/bad_news/cases
+    - cpx_agent/data/bad_news/cases_archive_v1
+    - cpx_agent/data/bad_news/checklist_reference.json
   runtime_modules:
-    - cpx_agent/src/cpx_core.py
-    - cpx_agent/src/cpx_service.py
+    - cpx_agent/src/bad_news_backend.py
     - cpx_agent/src/cpx_server.py
-    - cpx_agent/src/codex_patient.py
-    - cpx_agent/src/session_store.py
   state_budget:
     active_state_soft_max_lines: 800
     active_state_soft_max_kib: 36
@@ -156,8 +148,9 @@ app_setup:
   keep_disabled_by_default: true
 
 day_of_event_rules:
-  - 세부 질환이 공개되면 먼저 환자 카드와 체크리스트를 채운다.
-  - 앱 프레임워크보다 CPX 역할 계약과 안전장치를 먼저 고정한다.
+  - 확정 주제는 나쁜 소식 전하기이며 먼저 환자 케이스와 체크포인트를 채운다.
+  - 환자 발화 생성과 체크포인트 채점은 2026-CODE-MEDI backend에서 가져온 케이스 DB와 LLM 프롬프트 계약을 기준으로 한다.
+  - 앱 프레임워크보다 CPX 역할 계약, 체크포인트, 리포트 경계를 먼저 고정한다.
   - 의대생 팀원이 의료 시나리오와 체크리스트를 검토한다.
-  - SW 팀원은 UI, LLM 호출, 로그, 평가 리포트를 얇게 연결한다.
+  - SW 팀원은 UI, imported backend 기반 환자 발화 LLM, 로그, 평가 리포트를 얇게 연결한다.
   - 발표는 단순 챗봇이 아니라 교육용 표준화 환자 시뮬레이터임을 강조한다.

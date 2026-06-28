@@ -10,28 +10,38 @@ from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
-from urllib.parse import unquote, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
-from .cpx_service import CpxSessionService, codex_matcher_factory
+from .bad_news_backend import BadNewsSessionService
 
 
 ROOT = Path(__file__).resolve().parents[2]
 SESSION_ROUTE = re.compile(r"^/api/sessions/([^/]+)/(questions|complete)$")
+REPORT_ROUTE = re.compile(r"^/api/reports/([^/]+)$")
 
 
 class CpxRequestHandler(BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
-    service: CpxSessionService
+    service: BadNewsSessionService
     app_dir: Path
 
     def do_GET(self) -> None:  # noqa: N802
-        path = urlparse(self.path).path
+        parsed = urlparse(self.path)
+        path = parsed.path
         if path == "/api/health":
-            self._json(HTTPStatus.OK, {"status": "ok"})
+            self._json(HTTPStatus.OK, self.service.health())
         elif path == "/api/cases":
-            self._json(HTTPStatus.OK, self.service.list_cases())
+            query = parse_qs(parsed.query)
+            if query.get("format") == ["backend"]:
+                self._json(HTTPStatus.OK, self.service.cases.public_backend_cases())
+            else:
+                self._json(HTTPStatus.OK, self.service.list_cases())
         elif path == "/api/profile":
             self._json(HTTPStatus.OK, self.service.profile())
+        elif path == "/api/reports":
+            self._json(HTTPStatus.OK, self.service.list_reports())
+        elif match := REPORT_ROUTE.fullmatch(path):
+            self._json(HTTPStatus.OK, self.service.get_report(match.group(1)))
         elif path.startswith("/api/"):
             self._json(HTTPStatus.NOT_FOUND, {"error": "API route not found"})
         else:
@@ -45,8 +55,47 @@ class CpxRequestHandler(BaseHTTPRequestHandler):
                 case_id = payload.get("case_id")
                 if not isinstance(case_id, str) or not case_id:
                     raise ValueError("case_id is required")
-                response = self.service.start_session(case_id)
+                response = self.service.start_session(
+                    case_id,
+                    difficulty=str(payload.get("difficulty") or "중"),
+                    initial_emotion=(
+                        str(payload["initial_emotion"])
+                        if isinstance(payload.get("initial_emotion"), str)
+                        else None
+                    ),
+                )
                 self._json(HTTPStatus.CREATED, response)
+                return
+            if path == "/api/session/start":
+                response = self.service.start_backend_session(
+                    case_id=(
+                        str(payload["case_id"])
+                        if isinstance(payload.get("case_id"), str)
+                        else None
+                    ),
+                    difficulty=str(payload.get("difficulty") or "중"),
+                    initial_emotion=(
+                        str(payload["initial_emotion"])
+                        if isinstance(payload.get("initial_emotion"), str)
+                        else None
+                    ),
+                )
+                self._json(HTTPStatus.CREATED, response)
+                return
+            if path == "/api/turn":
+                session_id = payload.get("session_id")
+                message = payload.get("message")
+                if not isinstance(session_id, str) or not session_id:
+                    raise ValueError("session_id is required")
+                if not isinstance(message, str) or not message.strip():
+                    raise ValueError("message is required")
+                self._json(HTTPStatus.OK, self.service.take_turn(session_id, message))
+                return
+            if path == "/api/evaluate":
+                session_id = payload.get("session_id")
+                if not isinstance(session_id, str) or not session_id:
+                    raise ValueError("session_id is required")
+                self._json(HTTPStatus.OK, self.service.evaluate_backend_session(session_id))
                 return
 
             match = SESSION_ROUTE.fullmatch(path)
@@ -122,14 +171,11 @@ def build_server(
     host: str,
     port: int,
     *,
-    use_codex: bool,
     release_mode: str = "demo",
 ) -> ThreadingHTTPServer:
-    service = CpxSessionService(
-        ROOT / "cpx_agent" / "data" / "patient_cards",
-        ROOT / "cpx_agent" / "data" / "sessions" / "learner_profile.json",
-        matcher_factory=codex_matcher_factory if use_codex else None,
-        release_mode=release_mode,
+    service = BadNewsSessionService(
+        ROOT / "cpx_agent" / "data" / "bad_news",
+        ROOT / "cpx_agent" / "data" / "reports" / "bad_news",
     )
     handler = type(
         "ConfiguredCpxRequestHandler",
@@ -143,16 +189,14 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8787)
-    parser.add_argument("--llm", choices=("off", "codex"), default="off")
     parser.add_argument("--release-mode", choices=("demo", "production"), default="demo")
     args = parser.parse_args()
     server = build_server(
         args.host,
         args.port,
-        use_codex=args.llm == "codex",
         release_mode=args.release_mode,
     )
-    print(f"CPX app: http://{args.host}:{args.port} (LLM: {args.llm})", flush=True)
+    print(f"CPX app: http://{args.host}:{args.port}", flush=True)
     try:
         server.serve_forever()
     except KeyboardInterrupt:

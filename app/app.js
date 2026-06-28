@@ -1,9 +1,18 @@
+const EMOTION_OPTIONS = ["부정", "분노", "협상", "우울"];
+const EMOTION_SPRITE_CLASS = {
+  "부정": "emotion-denial",
+  "분노": "emotion-anger",
+  "협상": "emotion-bargaining",
+  "우울": "emotion-depression",
+};
+
 const state = {
   ready: false,
   pending: false,
   loadError: "",
   cases: [],
   currentCase: null,
+  initialEmotion: "부정",
   sessionId: null,
   session: null,
   completed: false,
@@ -14,14 +23,11 @@ const state = {
 
 const elements = Object.fromEntries(
   [
-    "infoBtn", "caseReadiness", "caseTitle", "caseMeta", "caseSelect", "readinessList",
-    "patientBubble", "learnerBubble", "learnerSprite", "coachSprite", "coachLine",
+    "patientBubble", "patientSprite", "learnerBubble", "learnerSprite", "coachSprite", "coachLine",
     "recordToggle", "recordCount", "recordPreview", "recordModal", "recordFeed",
     "closeRecordBtn", "composer", "freeQuestion", "sendBtn", "startBtn", "resetBtn",
-    "finishBtn", "assessmentPanel", "assessmentForm", "closeAssessmentBtn",
-    "resumeEncounterBtn", "submitAssessmentBtn", "assessmentSummary", "assessmentPrimary",
-    "assessmentDifferentials", "assessmentReasoning", "reportPanel", "closeReportBtn",
-    "reportCoverage", "reportMissed", "reportReasoning", "missedList", "reportDetail",
+    "finishBtn", "reportPanel", "closeReportBtn",
+    "reportCoverage", "reportCoverageBar", "reportMissed", "reportReasoning", "missedList", "reportDetail",
     "weaknessTags", "nextFocus", "nextCaseList", "nextCaseBtn",
   ].map((id) => [id, document.querySelector(`#${id}`)]),
 );
@@ -55,34 +61,23 @@ function messages() {
   return state.session?.messages || [];
 }
 
-function renderReadiness() {
-  elements.readinessList.replaceChildren();
-  if (!state.ready) {
-    elements.readinessList.append(
-      createTextElement("li", state.loadError ? "missing" : "pending", state.loadError || "문진 서버 연결 중"),
-    );
-    setText(elements.caseTitle, state.loadError ? "서버 확인 필요" : "케이스 준비 중");
-    setText(elements.caseMeta, state.loadError || "합성 교육용 데모 카드를 불러오고 있습니다.");
-    return;
-  }
+function visibleMessages() {
+  const transcript = messages();
+  return transcript.some((message) => message.role === "learner") ? transcript : [];
+}
 
-  elements.caseSelect.replaceChildren(
-    ...state.cases.map((caseItem) => {
-      const option = document.createElement("option");
-      option.value = caseItem.case_id;
-      option.textContent = caseItem.title;
-      return option;
-    }),
-  );
-  elements.caseSelect.value = state.currentCase.case_id;
-  setText(elements.caseTitle, state.currentCase.title);
-  setText(elements.caseMeta, state.currentCase.safe_metadata);
-  [
-    "카드 스키마 검사 통과",
-    "질문 기반 정보 공개",
-    "형성평가 리포트",
-    "로컬 학습 프로필",
-  ].forEach((label) => elements.readinessList.append(createTextElement("li", "ready", label)));
+function randomItem(items) {
+  if (!Array.isArray(items) || !items.length) return null;
+  return items[Math.floor(Math.random() * items.length)];
+}
+
+function setPatientEmotionSprite(emotion) {
+  if (!elements.patientSprite) return;
+  Object.values(EMOTION_SPRITE_CLASS).forEach((className) => {
+    elements.patientSprite.classList.remove(className);
+  });
+  const emotionClass = EMOTION_SPRITE_CLASS[emotion];
+  if (emotionClass) elements.patientSprite.classList.add(emotionClass);
 }
 
 function renderStatus() {
@@ -92,18 +87,27 @@ function renderStatus() {
   elements.sendBtn.disabled = !started || state.completed || state.pending;
   elements.freeQuestion.disabled = !started || state.completed || state.pending;
   elements.finishBtn.disabled = !started || state.completed || state.pending || !state.session?.can_complete;
-  elements.submitAssessmentBtn.disabled = state.pending;
-  elements.caseSelect.disabled = !state.ready || started || state.pending;
+}
+
+function positionPatientBubble(text) {
+  const cleanLength = (text || "").trim().length;
+  const sceneHeight = document.querySelector(".scene-stage")?.clientHeight || 390;
+  const mobileScene = sceneHeight <= 385;
+  const baseTop = mobileScene ? 96 : 104;
+  const lift = Math.min(mobileScene ? 18 : 24, Math.max(0, Math.ceil((cleanLength - 56) / 42) * 6));
+  const top = Math.max(mobileScene ? 78 : 82, baseTop - lift);
+  const tailTop = top < 90 ? 26 : 36;
+  elements.patientBubble.style.setProperty("--patient-bubble-top", `${top}px`);
+  elements.patientBubble.style.setProperty("--patient-bubble-tail-top", `${tailTop}px`);
 }
 
 function renderConversation() {
-  const transcript = messages();
+  const transcript = visibleMessages();
   const latestPatient = [...transcript].reverse().find((message) => message.role === "patient");
   const latestLearner = [...transcript].reverse().find((message) => message.role === "learner");
-  setText(
-    elements.patientBubble,
-    latestPatient?.content || "문진 시작을 누르면 표준화 환자 문진이 시작됩니다.",
-  );
+  const patientText = latestPatient?.content || "대화 시작을 누른 뒤 질문을 입력하면 환자가 답변합니다.";
+  setText(elements.patientBubble, patientText);
+  positionPatientBubble(patientText);
   if (latestLearner) {
     setText(elements.learnerBubble, latestLearner.content);
     elements.learnerBubble.hidden = false;
@@ -115,7 +119,7 @@ function renderConversation() {
 
 function renderRecord() {
   elements.recordFeed.replaceChildren();
-  const transcript = messages();
+  const transcript = visibleMessages();
   const questionCount = transcript.filter((message) => message.role === "learner").length;
   setText(elements.recordCount, questionCount ? `질문 ${questionCount}개` : "기록 없음");
   if (!transcript.length) {
@@ -142,19 +146,30 @@ function toggleRecord(forceOpen) {
   else elements.recordToggle.focus();
 }
 
-async function startEncounter() {
+async function startEncounter(options = {}) {
   if (!state.ready || state.sessionId || state.pending) return;
+  const caseItem = options.caseItem || randomItem(state.cases);
+  const initialEmotion = randomItem(EMOTION_OPTIONS) || state.initialEmotion;
+  if (!caseItem) {
+    setText(elements.coachLine, "사용 가능한 케이스가 없습니다.");
+    return;
+  }
   state.pending = true;
   renderStatus();
   try {
     const payload = await api("/api/sessions", {
       method: "POST",
-      body: JSON.stringify({ case_id: state.currentCase.case_id }),
+      body: JSON.stringify({
+        case_id: caseItem.case_id,
+        initial_emotion: initialEmotion,
+      }),
     });
     state.sessionId = payload.session_id;
     state.session = payload.session;
     state.currentCase = payload.case;
-    setText(elements.coachLine, "환자에게 직접 질문하세요. 질문한 내용에 한해 답변합니다.");
+    state.initialEmotion = payload.session?.initial_emotion || initialEmotion;
+    setPatientEmotionSprite(state.initialEmotion);
+    setText(elements.coachLine, "질문을 입력하면 환자가 질문 내용에 한해 답변합니다.");
     renderConversation();
     requestAnimationFrame(() => elements.freeQuestion.focus());
   } catch (error) {
@@ -211,7 +226,7 @@ function renderReportList() {
     const listItem = document.createElement("li");
     const button = document.createElement("button");
     button.type = "button";
-    button.className = "report-item-button";
+    button.className = `report-item-button status-${item.status || "unknown"}`;
     button.setAttribute("aria-pressed", String(item.id === state.selectedReportItemId));
     const statusLabel = item.status === "missed"
       ? "놓친 항목"
@@ -309,28 +324,16 @@ function renderNextPractice() {
   const recommendedCase = state.nextCase?.case;
   elements.nextCaseBtn.hidden = !recommendedCase;
   if (recommendedCase) {
-    setText(elements.nextCaseBtn, `${recommendedCase.title} 시작`);
+    setText(elements.nextCaseBtn, "랜덤 케이스 시작");
   }
-}
-
-function toggleAssessment(forceOpen) {
-  const shouldOpen = typeof forceOpen === "boolean" ? forceOpen : elements.assessmentPanel.hidden;
-  elements.assessmentPanel.hidden = !shouldOpen;
-  if (!shouldOpen) {
-    elements.finishBtn.focus();
-    return;
-  }
-  toggleRecord(false);
-  elements.assessmentPanel.parentElement.scrollTo({ top: 0, behavior: "auto" });
-  elements.assessmentSummary.focus();
 }
 
 function assessmentPayload() {
   return {
-    problem_summary: elements.assessmentSummary.value,
-    primary_impression: elements.assessmentPrimary.value,
-    differential_diagnoses: elements.assessmentDifferentials.value,
-    reasoning: elements.assessmentReasoning.value,
+    problem_summary: "대화 종료 후 외부 평가 모델을 연결할 예정입니다.",
+    primary_impression: "외부 평가 모델 연결 예정",
+    differential_diagnoses: "외부 평가 모델 연결 예정",
+    reasoning: "현재 데모에서는 대화 종료 즉시 리포트를 확인합니다.",
   };
 }
 
@@ -348,19 +351,23 @@ async function finishEncounter() {
     state.nextCase = payload.next_case;
     const items = reportItems();
     state.selectedReportItemId = items[0]?.id || null;
-    setText(elements.reportCoverage, `${state.report.coverage_percent}%`);
+    const coveragePercent = Math.max(0, Math.min(100, Number(state.report.coverage_percent) || 0));
+    setText(elements.reportCoverage, `${coveragePercent}%`);
+    if (elements.reportCoverageBar) {
+      elements.reportCoverageBar.style.width = `${coveragePercent}%`;
+    }
     setText(elements.reportMissed, String(state.report.items.filter((item) => item.status === "missed").length));
     setText(elements.reportReasoning, String(state.report.assessment_review_count));
     renderReportList();
     renderReportDetail();
     renderNextPractice();
     toggleRecord(false);
-    elements.assessmentPanel.hidden = true;
     elements.reportPanel.parentElement.scrollTo({ top: 0, behavior: "auto" });
     elements.reportPanel.hidden = false;
     elements.reportPanel.focus({ preventScroll: true });
-    setText(elements.patientBubble, "문진이 종료됐습니다. 교육용 리포트를 확인해 주세요.");
-    setText(elements.coachLine, "리포트는 문진 기록과 데모 카드의 비공개 형성평가 기준으로 생성했습니다.");
+    setText(elements.patientBubble, "대화가 종료됐습니다. 교육용 리포트를 확인해 주세요.");
+    setText(elements.coachLine, "리포트는 진단 스프레드시트와 데모 카드의 비공개 형성평가 기준으로 생성했습니다.");
+    positionPatientBubble(elements.patientBubble.textContent);
     elements.coachSprite.classList.add("writing");
   } catch (error) {
     setText(elements.coachLine, error.message);
@@ -377,21 +384,18 @@ function resetEncounter() {
   state.report = null;
   state.nextCase = null;
   state.selectedReportItemId = null;
-  elements.assessmentForm.reset();
-  elements.assessmentPanel.hidden = true;
+  setPatientEmotionSprite(null);
   elements.reportPanel.hidden = true;
   elements.recordModal.hidden = true;
   elements.recordToggle.setAttribute("aria-expanded", "false");
   elements.coachSprite.classList.remove("writing");
-  setText(elements.coachLine, "환자에게 직접 질문하면 질문한 내용에 한해 답변합니다.");
+  setText(elements.coachLine, "질문을 입력하면 환자가 질문 내용에 한해 답변합니다.");
   renderConversation();
   renderStatus();
 }
 
-async function startRecommendedCase() {
-  const recommendedCase = state.nextCase?.case;
-  if (!recommendedCase || state.pending) return;
-  state.currentCase = recommendedCase;
+async function startRandomFollowupCase() {
+  if (state.pending) return;
   resetEncounter();
   await startEncounter();
 }
@@ -401,52 +405,27 @@ function closeReport() {
   elements.resetBtn.focus();
 }
 
-function showFixtureInformation() {
-  const shouldOpen = elements.caseReadiness.hidden;
-  elements.caseReadiness.hidden = !shouldOpen;
-  elements.infoBtn.setAttribute("aria-expanded", String(shouldOpen));
-  if (!shouldOpen) return;
-  elements.caseReadiness.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  elements.caseReadiness.focus({ preventScroll: true });
-}
-
 async function loadCases() {
   try {
     const payload = await api("/api/cases");
     if (!Array.isArray(payload.cases) || !payload.cases.length) throw new Error("사용 가능한 케이스가 없습니다.");
     state.cases = payload.cases;
-    state.currentCase = payload.cases[0];
     state.ready = true;
   } catch (error) {
     state.loadError = `${error.message} CPX 서버를 먼저 실행하세요.`;
+    setText(elements.coachLine, state.loadError);
     console.error("CODE MEDI CPX API load failed", error);
   }
-  renderReadiness();
   renderStatus();
 }
 
 elements.startBtn.addEventListener("click", startEncounter);
 elements.resetBtn.addEventListener("click", resetEncounter);
-elements.infoBtn.addEventListener("click", showFixtureInformation);
-elements.caseSelect.addEventListener("change", () => {
-  if (state.sessionId || state.pending) return;
-  const selected = state.cases.find((caseItem) => caseItem.case_id === elements.caseSelect.value);
-  if (!selected) return;
-  state.currentCase = selected;
-  renderReadiness();
-  renderStatus();
-});
 elements.recordToggle.addEventListener("click", () => toggleRecord());
 elements.closeRecordBtn.addEventListener("click", () => toggleRecord(false));
-elements.finishBtn.addEventListener("click", () => toggleAssessment(true));
-elements.closeAssessmentBtn.addEventListener("click", () => toggleAssessment(false));
-elements.resumeEncounterBtn.addEventListener("click", () => toggleAssessment(false));
-elements.assessmentForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  await finishEncounter();
-});
+elements.finishBtn.addEventListener("click", finishEncounter);
 elements.closeReportBtn.addEventListener("click", closeReport);
-elements.nextCaseBtn.addEventListener("click", startRecommendedCase);
+elements.nextCaseBtn.addEventListener("click", startRandomFollowupCase);
 elements.composer.addEventListener("submit", async (event) => {
   event.preventDefault();
   await submitQuestion(elements.freeQuestion.value);
@@ -454,11 +433,10 @@ elements.composer.addEventListener("submit", async (event) => {
 document.addEventListener("keydown", (event) => {
   if (event.key !== "Escape") return;
   if (!elements.recordModal.hidden) toggleRecord(false);
-  else if (!elements.assessmentPanel.hidden) toggleAssessment(false);
   else if (!elements.reportPanel.hidden) closeReport();
 });
+window.addEventListener("resize", () => positionPatientBubble(elements.patientBubble.textContent));
 
 renderConversation();
-renderReadiness();
 renderStatus();
 loadCases();

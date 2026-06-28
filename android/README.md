@@ -4,7 +4,7 @@ Open this `android` directory as a project in Android Studio. Before running the
 emulator, start the CPX service from the repository root:
 
 ```powershell
-python -m cpx_agent.src.cpx_server --port 8787 --llm codex
+python -m cpx_agent.src.cpx_server --port 8787
 ```
 
 The debug app loads `http://10.0.2.2:8787`, Android Emulator's alias for the

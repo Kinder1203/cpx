@@ -19,8 +19,9 @@ python tools/healthcheck.py --paths cpx_agent/prompts/patient_role.md
 ## Prompt Harness
 
 ```powershell
-python tools/prompt_harness.py --patient-card cpx_agent/data/patient_cards/chest_pain_example.json --validate-only
-python tools/prompt_harness.py --patient-card cpx_agent/data/patient_cards/chest_pain_example.json --print-patient-prompt
+python tools/prompt_harness.py --bad-news-case B05-breast-cancer --validate-only
+python tools/prompt_harness.py --bad-news-case B05-breast-cancer --print-patient-prompt
+python tools/prompt_harness.py --bad-news-case B05-breast-cancer --print-checklist-prompt
 ```
 
 ## Bootstrap

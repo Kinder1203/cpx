@@ -1,7 +1,7 @@
 # App Documentation
 
-이 폴더는 현재 구현된 CODE MEDI CPX 앱의 제품·화면 계약을 관리한다.
-아이디어 백로그와 현재 계약을 섞지 않는다.
+This folder keeps the product and UI contract for the CODE MEDI CPX demo. It is
+planning documentation, not a separate runtime source of truth.
 
 ## Reading Order
 
@@ -15,24 +15,28 @@
 8. `pixel_asset_pipeline.md`
 9. `visual_quality_bar.md`
 
-환자 역할, 정보 공개, 평가 안전 계약의 상위 source of truth는
-`cpx_agent/docs/cpx_protocol.md`다.
+The higher-level CPX safety and role contract is
+`cpx_agent/docs/cpx_protocol.md`.
 
 ## Current Contract
 
-- 학습자 입력은 자유 문장 질문 하나다.
-- 질문은 서버에서 환자 카드의 문진 개념으로 정규화한다.
-- 환자 답변은 스키마 및 실행 모드 검사를 통과한 카드에 있는 내용만 반환한다.
-- 문진 뒤 학습자가 문제 요약, 우선 진단, 감별 진단, 판단 근거를 제출한다.
-- 현재 평가는 카드에 정의된 문진·임상 판단 규칙을 결정적으로 적용한다.
-- 약점 프로필은 실행 모드에서 허용된 카드 라이브러리의 다음 케이스 선택에만 사용한다.
-- 브라우저 클라이언트와 Android WebView는 같은 Python 서비스를 사용한다.
+- The learner enters one free-text doctor utterance at a time.
+- The Python service owns case selection, session state, patient replies,
+  evaluation, and report generation.
+- Patient replies are generated from the imported 2026-CODE-MEDI bad-news case
+  database and patient-role LLM prompt contract.
+- Encounter completion triggers checklist/PPI checkpoint scoring and a formative
+  report.
+- The browser client and Android WebView use the same local Python service.
+- Live patient replies and scoring require `OPENAI_API_KEY`; Codex CLI runtime
+  model calls are not part of the app.
 
 ## Deferred
 
-Mission Map, 질문 카드, Patient Stability/Trust/Risk, 신체진찰, 자동 환자 생성은
-현재 기능 계약이 아니다. 외부 근거 링크는 카드에 직접 연결된 관련 자료가 있을 때만
-해당 피드백에 표시한다.
+Mission Map, structured question cards, patient Stability/Trust/Risk gauges,
+physical-exam flows, and automatic case authoring are not part of the active
+demo contract. Add them only if they directly support the confirmed bad-news
+delivery station.
 
-Playwright는 구현 후 UI 검증에 사용한다. Figma는 구체적인 디자인 소스가 정해졌을
-때만 사용한다.
+Playwright is for UI verification after implementation changes. Figma is used
+only when a concrete source file or design reference is selected.
